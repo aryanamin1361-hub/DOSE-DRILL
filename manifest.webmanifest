@@ -1,0 +1,19 @@
+{
+  "name": "Dose Drill: Pharmacy Calculations",
+  "short_name": "Dose Drill",
+  "description": "Pharmacy calculation, abbreviation and drug class practice for trainee pharmacy technicians.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F2FF",
+  "theme_color": "#6C4DF5",
+  "lang": "en-GB",
+  "categories": ["education", "medical"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
