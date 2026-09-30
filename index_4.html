@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dose Drill</title>
+<meta name="description" content="Pharmacy calculation, abbreviation and drug class practice for trainee pharmacy technicians.">
+<meta name="theme-color" content="#5B3CF0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F4FF; --surface:#FFFFFF; --ink:#1A1640; --muted:#5B5780; --line:#E4E0F7; --teal:#0B7A75;
+  --violet:#5B3CF0; --sun:#C2410C; --pink:#D6285E; --sky:#1D63D8; --lime:#4D7C0F; --ok:#15803D;
+  --bad:#D0253A; --ok-bg:#E8FAEE; --bad-bg:#FFF0F1; --field:#FBFAFF; --on-accent:#FFFFFF;
+  --violet-soft:#ECE7FF; --gold:#FFB020;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#100E22; --surface:#1C1936; --ink:#F1EEFF; --muted:#ABA6CF; --line:#312C58; --teal:#2DD4BF;
+    --violet:#A48BFF; --sun:#FFA24D; --pink:#FF7AA2; --sky:#6AAEFF; --lime:#A3E635; --ok:#4ADE80;
+    --bad:#FF808A; --ok-bg:#12352A; --bad-bg:#3F1A24; --field:#161330; --on-accent:#15122B;
+    --violet-soft:#2A2352; --gold:#FFC857;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#100E22; --surface:#1C1936; --ink:#F1EEFF; --muted:#ABA6CF; --line:#312C58; --teal:#2DD4BF;
+  --violet:#A48BFF; --sun:#FFA24D; --pink:#FF7AA2; --sky:#6AAEFF; --lime:#A3E635; --ok:#4ADE80;
+  --bad:#FF808A; --ok-bg:#12352A; --bad-bg:#3F1A24; --field:#161330; --on-accent:#15122B;
+  --violet-soft:#2A2352; --gold:#FFC857;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size:17px; line-height:1.5; font-variant-numeric:tabular-nums; overflow-x:hidden}
+h1,h2,h3,.display{font-family:"Fredoka","Atkinson Hyperlegible",system-ui,sans-serif; font-weight:600; letter-spacing:-0.005em}
+.wrap{max-width:600px; margin:0 auto; padding:20px 16px 56px}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--violet); outline-offset:2px}
+.hidden{display:none !important}
+.muted{color:var(--muted)}
+
+/* Top bar */
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px}
+.logo{display:flex; align-items:center; gap:10px}
+.logo h1{font-size:1.7rem; margin:0; line-height:1}
+.pill-icon{width:34px; height:16px; border-radius:999px; background:linear-gradient(90deg,var(--pink) 50%,var(--surface) 50%); border:2px solid var(--ink); transform:rotate(-30deg)}
+.plan{background:var(--surface); border:2px solid var(--line); border-radius:999px; padding:5px 14px; font-weight:700; font-size:.85rem}
+.plan.pro{border-color:var(--violet); color:var(--violet)}
+
+/* Level card */
+.level{background:var(--surface); border-radius:18px; padding:14px 16px; display:grid; grid-template-columns:auto 1fr auto; gap:4px 14px; align-items:center; margin-bottom:16px; border:2px solid var(--line)}
+.badge{grid-row:1 / span 2; grid-column:1; width:52px; height:52px; border-radius:50%; background:var(--violet); color:var(--on-accent); display:grid; place-items:center; font-family:Fredoka,sans-serif; font-size:1.5rem; font-weight:700}
+.level .lname{font-weight:700; grid-column:2; grid-row:1}
+.level .xpwrap{grid-column:2; grid-row:2}
+.xpbar{height:10px; background:var(--line); border-radius:999px; overflow:hidden}
+.xpbar i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--violet),var(--gold)); border-radius:999px; transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.streak{grid-row:1 / span 2; grid-column:3; text-align:center; font-weight:700; line-height:1.1}
+.streak b{display:block; font-family:Fredoka,sans-serif; font-size:1.6rem; color:var(--sun)}
+.streak span{font-size:.75rem; color:var(--muted); font-weight:400}
+
+/* Daily hero */
+.daily{position:relative; overflow:hidden; background:var(--violet); color:var(--on-accent); border-radius:22px; padding:20px 20px 18px; margin-bottom:24px}
+.daily h2{margin:0 0 4px; font-size:1.45rem; max-width:calc(100% - 70px)}
+.daily p{margin:0 0 14px; opacity:.92; max-width:calc(100% - 70px)}
+.daily .btn{background:var(--on-accent); color:var(--violet)}
+.daily.done{background:var(--ok)}
+.daily .caps{position:absolute; right:-14px; top:14px; display:flex; flex-direction:column; gap:10px; pointer-events:none}
+.daily .caps i{display:block; width:78px; height:30px; border-radius:999px; border:3px solid rgba(255,255,255,.85); background:linear-gradient(90deg,rgba(255,255,255,.9) 50%,transparent 50%); transform:rotate(-24deg)}
+.daily .caps i:nth-child(2){margin-left:26px; background:linear-gradient(90deg,var(--sun) 50%,transparent 50%)}
+.daily .caps i:nth-child(3){margin-left:6px; background:linear-gradient(90deg,var(--pink) 50%,transparent 50%)}
+@media (prefers-reduced-motion:no-preference){ .daily .caps{animation:bob 4s ease-in-out infinite} }
+@keyframes bob{50%{transform:translateY(-6px)}}
+
+/* Sections */
+.sec{margin:0 0 22px}
+.sec h2{font-size:1.2rem; margin:0 0 10px}
+.caps-grid{display:grid; grid-template-columns:1fr; gap:10px}
+@media (min-width:520px){ .caps-grid{grid-template-columns:1fr 1fr} }
+.cap{position:relative; display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--surface); border:2px solid var(--line); border-radius:999px; padding:6px 16px 6px 6px; transition:transform .15s ease, border-color .15s}
+.cap:hover{border-color:var(--c)}
+.cap:active{transform:scale(.97)}
+.cap .end{flex:none; width:52px; height:52px; border-radius:50%; background:var(--c); display:grid; place-items:center; font-size:1.5rem}
+.cap .txt{flex:1; min-width:0}
+.cap .t{display:block; font-weight:700; line-height:1.25}
+.cap .s{display:block; font-size:.85rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.cap .tag{flex:none; font-size:.8rem; font-weight:700; color:var(--muted)}
+.cap .tag.lock{color:var(--c)}
+.cap .ring{position:absolute; left:6px; bottom:4px; width:52px; height:4px; border-radius:2px; background:var(--line); overflow:hidden}
+.cap .ring i{display:block; height:100%; background:var(--c)}
+
+/* Buttons */
+.btn{display:inline-block; border:0; border-radius:999px; padding:12px 22px; font-weight:700; background:var(--ink); color:var(--bg); text-decoration:none; text-align:center; transition:transform .12s}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:none; color:var(--ink); border:2px solid var(--ink)}
+.btn.color{background:var(--c,var(--violet)); color:var(--on-accent)}
+.btn:disabled{opacity:.45; cursor:default}
+.back{background:none; border:0; padding:6px 0; color:var(--muted); font-weight:700}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+
+/* Quiz */
+.qhead{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0 10px}
+.qhead h2{margin:0; font-size:1.25rem; color:var(--c)}
+.dots{display:flex; gap:4px; margin-bottom:12px}
+.dots i{flex:1; height:8px; border-radius:999px; background:var(--line); transition:background .3s}
+.dots i.ok{background:var(--ok)} .dots i.bad{background:var(--bad)} .dots i.now{background:var(--c)} .dots i.done{background:var(--muted)}
+.card{background:var(--surface); border:2px solid var(--line); border-top:8px solid var(--c); border-radius:20px; padding:18px; margin-bottom:14px}
+.card .q{font-size:1.3rem; line-height:1.4; margin:0 0 16px}
+.answer-row{display:flex; gap:8px}
+.answer-row .btn{flex:none; padding:12px 18px}
+.field{flex:1; min-width:0; display:flex; align-items:center; background:var(--field); border:2px solid var(--line); border-radius:14px; padding:0 12px}
+.field:focus-within{border-color:var(--c)}
+.field input{flex:1; min-width:0; border:0; background:none; color:var(--ink); font:inherit; font-size:1.3rem; padding:12px 0; outline:none}
+.field .unit{color:var(--muted); font-weight:700; padding-left:8px}
+.choices{display:grid; gap:8px}
+.choice{text-align:left; background:var(--field); border:2px solid var(--line); border-radius:14px; padding:12px 14px; font-weight:700; transition:transform .12s, background .2s, border-color .2s}
+.choice:hover:not(:disabled){border-color:var(--c)}
+.choice.picked{border-color:var(--c); background:var(--surface)}
+.choice.right{background:var(--ok-bg); border-color:var(--ok); color:var(--ok)}
+.choice.wrong{background:var(--bad-bg); border-color:var(--bad); color:var(--bad)}
+.feedback{border-radius:16px; padding:14px 16px; margin-bottom:14px}
+.feedback.ok{background:var(--ok-bg); color:var(--ok)}
+.feedback.bad{background:var(--bad-bg); color:var(--bad)}
+.feedback p{margin:0} .feedback .working{color:var(--ink); margin-top:6px}
+.xp-pop{display:inline-block; margin-left:8px; font-weight:700; color:var(--violet)}
+@media (prefers-reduced-motion:no-preference){
+  .card.enter{animation:enter .35s cubic-bezier(.2,.9,.3,1.2)}
+  .card.shake{animation:shake .4s}
+  .feedback{animation:enter .25s ease-out}
+  .xp-pop{animation:float 1s ease-out forwards}
+}
+@keyframes enter{from{transform:translateY(14px) scale(.98); opacity:0}to{transform:none; opacity:1}}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes float{from{opacity:0; transform:translateY(6px)}30%{opacity:1}to{opacity:0; transform:translateY(-14px)}}
+
+/* Clock */
+.clock{position:relative; width:64px; height:64px; flex:none}
+.clock svg{transform:rotate(-90deg)}
+.clock b{position:absolute; inset:0; display:grid; place-items:center; font-family:Fredoka,sans-serif; font-size:1.3rem}
+.clock-score{font-family:Fredoka,sans-serif; font-size:1.2rem}
+
+/* Flashcards */
+.flip{perspective:1000px; margin:6px 0 16px; cursor:pointer}
+.flip-inner{position:relative; height:230px; transition:transform .55s cubic-bezier(.3,.8,.3,1); transform-style:preserve-3d}
+.flip.on .flip-inner{transform:rotateY(180deg)}
+.face{position:absolute; inset:0; backface-visibility:hidden; border-radius:22px; display:grid; place-items:center; text-align:center; padding:20px}
+.face.front{background:var(--c); color:var(--on-accent)}
+.face.front b{font-family:Fredoka,sans-serif; font-size:3rem}
+.face.back{background:var(--surface); border:3px solid var(--c); transform:rotateY(180deg); font-size:1.4rem; font-weight:700}
+.face small{display:block; font-size:.85rem; opacity:.85; font-weight:400; margin-top:8px}
+@media (prefers-reduced-motion:reduce){ .flip-inner{transition:none} }
+
+/* Results */
+.big{font-family:Fredoka,sans-serif; font-size:4.2rem; line-height:1; margin:16px 0 6px; color:var(--c)}
+.review{list-style:none; padding:0; margin:18px 0 0}
+.review li{background:var(--surface); border-left:6px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px}
+.review li.ok{border-left-color:var(--ok)} .review li.bad{border-left-color:var(--bad)}
+.review .w{color:var(--muted); font-size:.92rem}
+
+/* Sheet */
+.sheet-bg{position:fixed; inset:0; background:rgba(15,10,40,.5); display:flex; align-items:flex-end; justify-content:center; z-index:20}
+.sheet{background:var(--surface); width:100%; max-width:600px; border-radius:24px 24px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px)); max-height:92%; overflow:auto}
+@media (prefers-reduced-motion:no-preference){ .sheet{animation:rise .3s cubic-bezier(.2,.9,.3,1)} }
+@keyframes rise{from{transform:translateY(40%)}to{transform:none}}
+.price{font-family:Fredoka,sans-serif; font-size:2.8rem; line-height:1; margin:6px 0 2px; color:var(--violet)}
+.price small{font-size:1rem; color:var(--muted); font-family:"Atkinson Hyperlegible",sans-serif}
+.perks{list-style:none; padding:0; margin:14px 0 18px; display:grid; gap:8px}
+.perks li{display:flex; gap:10px; align-items:center}
+.perks li span{flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:var(--bg)}
+.note{font-size:.88rem; color:var(--muted); margin:10px 0 6px}
+.linkbtn{background:none; border:0; padding:8px 0; color:var(--muted); text-decoration:underline}
+.urlbox{flex:1; min-width:0; font:inherit; font-size:.8rem; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--field); color:var(--ink)}
+
+/* Toast + confetti */
+.toast{position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top,0px)); transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:999px; font-weight:700; z-index:40; box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:no-preference){ .toast{animation:drop .4s cubic-bezier(.2,.9,.3,1.3)} }
+@keyframes drop{from{transform:translate(-50%,-30px); opacity:0}}
+#confetti{position:fixed; inset:0; pointer-events:none; z-index:30; width:100%; height:100%}
+
+
+/* Tab bar */
+.wrap{padding-bottom:120px}
+.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:15; background:var(--surface); border-top:2px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px)); display:flex; justify-content:center}
+.tabbar .in{display:flex; gap:4px; width:100%; max-width:600px}
+.tab{flex:1; background:none; border:0; border-radius:14px; padding:6px 4px; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:.8rem; font-weight:700; color:var(--muted); transition:background .2s,color .2s}
+.tab span{font-size:1.3rem; line-height:1}
+.tab.on{color:var(--violet); background:var(--violet-soft)}
+
+/* Help chat */
+#help{display:flex; flex-direction:column; min-height:calc(100vh - 170px)}
+.chat{flex:1; display:flex; flex-direction:column; gap:10px; padding:4px 0 12px}
+.msg{max-width:86%; padding:11px 14px; border-radius:18px; line-height:1.45}
+.msg.bot{align-self:flex-start; background:var(--surface); border:2px solid var(--line); border-bottom-left-radius:6px}
+.msg.me{align-self:flex-end; background:var(--violet); color:var(--on-accent); border-bottom-right-radius:6px}
+.msg p{margin:0 0 6px} .msg p:last-child{margin:0}
+.msg .btn{margin-top:8px; padding:9px 16px; font-size:.95rem}
+.msg pre{white-space:pre-wrap; font:inherit; font-size:.88rem; background:var(--bg); border-radius:10px; padding:10px; margin:8px 0 0}
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-self:flex-start; max-width:100%}
+.chip{background:var(--violet-soft); border:2px solid var(--violet); color:var(--violet); border-radius:999px; padding:7px 14px; font-weight:700; font-size:.92rem}
+.chip:active{transform:scale(.96)}
+.typing{align-self:flex-start; background:var(--surface); border:2px solid var(--line); border-radius:18px; padding:12px 16px; display:flex; gap:5px}
+.typing i{width:8px; height:8px; border-radius:50%; background:var(--muted); opacity:.4}
+@media (prefers-reduced-motion:no-preference){
+  .typing i{animation:blink 1s infinite} .typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+  .msg,.chips{animation:enter .25s ease-out}
+}
+@keyframes blink{50%{opacity:1; transform:translateY(-3px)}}
+.composer{position:sticky; bottom:calc(72px + env(safe-area-inset-bottom,0px)); display:flex; gap:8px; background:var(--bg); padding:8px 0}
+.composer input{flex:1; min-width:0; font:inherit; padding:12px 16px; border-radius:999px; border:2px solid var(--line); background:var(--surface); color:var(--ink)}
+.composer input:focus{border-color:var(--violet); outline:none}
+.composer .btn{flex:none; background:var(--violet); color:var(--on-accent)}
+
+/* Account */
+.acard{background:var(--surface); border:2px solid var(--line); border-radius:20px; padding:18px; margin-bottom:14px}
+.acard h3{margin:0 0 4px; font-size:1.15rem}
+.acard p{margin:0 0 12px}
+.planbig{display:flex; align-items:center; gap:14px; margin-bottom:12px}
+.planbig .end{width:56px; height:56px; border-radius:50%; display:grid; place-items:center; font-size:1.6rem; background:var(--line)}
+.planbig.pro .end{background:var(--violet)}
+.planbig b{font-family:Fredoka,sans-serif; font-size:1.4rem; display:block; line-height:1.1}
+.list{list-style:none; margin:0; padding:0}
+.list button,.list a{width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px; background:none; border:0; border-bottom:1px solid var(--line); padding:13px 0; text-align:left; font-weight:700; color:var(--ink); text-decoration:none}
+.list li:last-child button,.list li:last-child a{border-bottom:0}
+.list .chev{color:var(--muted)}
+.list .danger{color:var(--bad)}
+.stack{display:grid; gap:10px}
+.stack .btn{width:100%}
+
+/* Policy pages */
+.policy{background:var(--surface); border:2px solid var(--line); border-radius:20px; padding:20px 20px 8px}
+.policy h2{margin:0 0 2px; font-size:1.5rem}
+.policy h3{font-size:1.05rem; margin:22px 0 6px}
+.policy p,.policy li{max-width:68ch}
+.policy ul{padding-left:20px}
+.policy .updated{color:var(--muted); font-size:.9rem; margin:0 0 10px}
+
+footer{margin-top:32px; font-size:.85rem; color:var(--muted); border-top:2px solid var(--line); padding-top:14px}
+footer p{margin:0 0 8px}
+details summary{cursor:pointer; font-weight:700}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="wrap">
+
+<!-- HOME -->
+<section id="home">
+  <div class="top">
+    <div class="logo"><div class="pill-icon" aria-hidden="true"></div><h1>Dose Drill</h1></div>
+    <button class="plan" id="planBtn" type="button">Free plan</button>
+  </div>
+
+  <div class="level">
+    <div class="badge" id="lvNum">1</div>
+    <div class="lname" id="lvName">Level 1</div>
+    <div class="streak"><b id="streakNum">0</b><span>day streak</span></div>
+    <div class="xpwrap"><div class="xpbar"><i id="xpFill"></i></div><div class="muted" style="font-size:.8rem;margin-top:3px" id="xpText">0 / 100 XP</div></div>
+  </div>
+
+  <div class="daily" id="dailyCard">
+    <div class="caps" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h2 id="dailyTitle">Today's challenge</h2>
+    <p id="dailyText">Five mixed questions from every topic. Finish it to keep your streak going and earn 30 bonus XP.</p>
+    <button class="btn" id="dailyBtn" type="button">Start challenge</button>
+  </div>
+
+  <div class="sec"><h2>Calculations</h2><div class="caps-grid" id="calcGrid"></div></div>
+  <div class="sec"><h2>Learn the language</h2><div class="caps-grid" id="learnGrid"></div></div>
+  <div class="sec"><h2>Test yourself</h2><div class="caps-grid" id="testGrid"></div></div>
+
+  <footer>
+    <p>For practice only. At work, always follow your pharmacy's procedures and have calculations checked by a pharmacist.</p>
+    <p>Terms, refunds and privacy are in the Account tab.</p>
+  </footer>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz" class="hidden">
+  <button class="back" id="quitBtn" type="button">‹ Home</button>
+  <div class="qhead">
+    <h2 id="qTitle"></h2>
+    <span class="muted" id="qCount"></span>
+    <div class="clock hidden" id="clockWrap">
+      <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="7"/><circle id="clockArc" cx="32" cy="32" r="27" fill="none" stroke="var(--c)" stroke-width="7" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="0"/></svg>
+      <b id="clockNum">60</b>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="card" id="card">
+    <p class="q" id="qText"></p>
+    <form class="answer-row" id="numForm" autocomplete="off">
+      <label class="field"><input id="ansInput" inputmode="decimal" aria-label="Your answer" placeholder="Your answer"><span class="unit" id="qUnit"></span></label>
+      <button class="btn color" id="checkBtn" type="submit">Check</button>
+    </form>
+    <div class="choices hidden" id="choices"></div>
+  </div>
+  <div id="feedback" class="feedback hidden"></div>
+  <button class="btn color hidden" id="nextBtn" type="button">Next question</button>
+</section>
+
+<!-- FLASHCARDS -->
+<section id="flash" class="hidden">
+  <button class="back" id="flashBack" type="button">‹ Home</button>
+  <div class="qhead"><h2 style="color:var(--c)">Abbreviation flashcards</h2><span class="muted" id="flashCount"></span></div>
+  <p class="muted" style="margin:0">Tap the card to flip it.</p>
+  <div class="flip" id="flipCard" tabindex="0" role="button" aria-label="Flip card">
+    <div class="flip-inner">
+      <div class="face front"><div><b id="fFront"></b><small>What does it mean?</small></div></div>
+      <div class="face back"><div id="fBack"></div></div>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn ghost" id="stillBtn" type="button" style="flex:1">Still learning</button>
+    <button class="btn color" id="knewBtn" type="button" style="flex:1">I knew it</button>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results" class="hidden">
+  <h2 id="rTitle" style="margin:6px 0 0"></h2>
+  <div class="big" id="rScore"></div>
+  <p class="muted" id="rMsg" style="margin:0"></p>
+  <p id="rXp" style="font-weight:700; color:var(--violet); margin:8px 0 0"></p>
+  <div class="row" style="margin-top:18px">
+    <button class="btn color" id="rAgain" type="button">Go again</button>
+    <button class="btn ghost" id="rHome" type="button">Home</button>
+  </div>
+  <ul class="review" id="rReview"></ul>
+</section>
+
+<!-- HELP -->
+<section id="help" class="hidden">
+  <div class="top"><div class="logo"><div class="pill-icon" aria-hidden="true"></div><h1>Help</h1></div></div>
+  <div class="chat" id="chat" aria-live="polite"></div>
+  <form class="composer" id="composer" autocomplete="off">
+    <input id="chatInput" placeholder="Type your question" aria-label="Type your question">
+    <button class="btn" type="submit">Send</button>
+  </form>
+</section>
+
+<!-- ACCOUNT -->
+<section id="account" class="hidden">
+  <div class="top"><div class="logo"><div class="pill-icon" aria-hidden="true"></div><h1>Account</h1></div></div>
+  <div class="acard">
+    <div class="planbig" id="planBig"><div class="end" id="planIcon">🌱</div><div><b id="planName">Free plan</b><span class="muted" id="planSub"></span></div></div>
+    <div class="stack" id="planActions"></div>
+  </div>
+  <div class="acard">
+    <h3>Subscription</h3>
+    <ul class="list">
+      <li><a id="manageBtn" href="https://billing.stripe.com/p/login/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener">Manage or cancel subscription <span class="chev">›</span></a></li>
+      <li><button type="button" id="restoreBtn">Restore premium on this device <span class="chev">›</span></button></li>
+      <li><button type="button" id="refundBtn">Request a refund <span class="chev">›</span></button></li>
+    </ul>
+  </div>
+  <div class="acard">
+    <h3>Your progress</h3>
+    <p class="muted" id="progressSummary"></p>
+    <ul class="list"><li><button type="button" id="resetBtn" class="danger">Reset all progress <span class="chev">›</span></button></li></ul>
+  </div>
+  <div class="acard">
+    <h3>Policies</h3>
+    <ul class="list">
+      <li><button type="button" data-policy="terms">Terms of service <span class="chev">›</span></button></li>
+      <li><button type="button" data-policy="refunds">Cancellation and refund policy <span class="chev">›</span></button></li>
+      <li><button type="button" data-policy="privacy">Privacy policy <span class="chev">›</span></button></li>
+    </ul>
+  </div>
+  <p class="muted" style="font-size:.85rem">Dose Drill · United Kingdom</p>
+</section>
+
+<!-- POLICY -->
+<section id="policy" class="hidden">
+  <button class="back" id="policyBack" type="button">‹ Account</button>
+  <article class="policy" id="policyBody"></article>
+</section>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="Main">
+  <div class="in">
+    <button class="tab on" type="button" data-tab="home"><span>🏠</span>Practice</button>
+    <button class="tab" type="button" data-tab="help"><span>💬</span>Help</button>
+    <button class="tab" type="button" data-tab="account"><span>👤</span>Account</button>
+  </div>
+</nav>
+
+<!-- SUBSCRIBE SHEET -->
+<div class="sheet-bg hidden" id="sheetBg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet">
+    <h2 id="sheetTitle" style="margin:0">Go premium</h2>
+    <div class="price">£1 <small>a month</small></div>
+    <p class="muted" style="margin:0">Less than a meal deal. Cancel any time.</p>
+    <ul class="perks">
+      <li><span>🧮</span>Quantities, percentages, infusion rates and mg/kg doses</li>
+      <li><span>💊</span>Drug class quiz with suffix tricks</li>
+      <li><span>⏱️</span>Beat the clock speed rounds</li>
+      <li><span>📝</span>Mock exams with full worked answers</li>
+      <li><span>🔁</span>Mistake review that brings back what you got wrong</li>
+    </ul>
+    <a class="btn color" id="payBtn" href="https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener" style="display:block">Subscribe for £1 a month</a>
+    <p class="note">If the payment page doesn't open, copy this link into your browser:</p>
+    <div class="row" style="flex-wrap:nowrap; align-items:center">
+      <input class="urlbox" id="payUrl" readonly value="https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00" aria-label="Payment link">
+      <button class="btn ghost" id="copyBtn" type="button" style="padding:8px 14px">Copy</button>
+    </div>
+    <p class="note">By subscribing you agree to our <button class="linkbtn" style="padding:0" type="button" data-policy="terms">Terms of service</button> and ask for premium to start straight away. Because access starts immediately, you lose the 14-day right to cancel for a refund once premium is unlocked. You can cancel future payments any time from Account.</p>
+    <div class="row" style="justify-content:space-between">
+      <button class="linkbtn" id="unlockBtn" type="button">I have already subscribed</button>
+      <button class="linkbtn" id="closeSheet" type="button">Not now</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAYMENT_LINK = "https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00";
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const fmt = n => String(parseFloat(Number(n).toFixed(3)));
+const freq = t => ({1:"once a day",2:"twice a day",3:"three times a day",4:"four times a day"})[t];
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- calculation generators ---------- */
+function genUnits(){
+  const kind = pick(["g-mg","mg-g","mg-mcg","mcg-mg","l-ml"]);
+  if(kind==="g-mg"){ const v=pick([0.05,0.1,0.125,0.25,0.5,1.5,2]); const a=v*1000;
+    return {q:`Convert ${fmt(v)} g to milligrams.`, a, unit:"mg", w:`1 g = 1000 mg, so ${fmt(v)} × 1000 = ${fmt(a)} mg`}; }
+  if(kind==="mg-g"){ const v=pick([50,125,250,500,750,1500]); const a=v/1000;
+    return {q:`Convert ${v} mg to grams.`, a, unit:"g", w:`1000 mg = 1 g, so ${v} ÷ 1000 = ${fmt(a)} g`}; }
+  if(kind==="mg-mcg"){ const v=pick([0.1,0.125,0.25,0.5,2]); const a=v*1000;
+    return {q:`Convert ${fmt(v)} mg to micrograms.`, a, unit:"mcg", w:`1 mg = 1000 mcg, so ${fmt(v)} × 1000 = ${fmt(a)} mcg`}; }
+  if(kind==="mcg-mg"){ const v=pick([62.5,125,250,500]); const a=v/1000;
+    return {q:`Convert ${fmt(v)} micrograms to milligrams.`, a, unit:"mg", w:`1000 mcg = 1 mg, so ${fmt(v)} ÷ 1000 = ${fmt(a)} mg`}; }
+  const v=pick([0.25,0.5,1.5,2]); const a=v*1000;
+  return {q:`Convert ${fmt(v)} litres to millilitres.`, a, unit:"ml", w:`1 L = 1000 ml, so ${fmt(v)} × 1000 = ${fmt(a)} ml`};
+}
+function genTablets(){
+  const s=pick([5,10,20,25,50,100,250,500]); const m=pick([0.5,1,1.5,2,3,4]); const d=s*m;
+  return {q:`The dose is ${fmt(d)} mg. You have ${s} mg tablets. How many tablets make one dose?`, a:m, unit:"tablets",
+    w:`Dose ÷ strength: ${fmt(d)} mg ÷ ${s} mg = ${fmt(m)} tablets`};
+}
+function genLiquids(){
+  const s=pick([50,100,125,200,250]); const ml=pick([2.5,5,7.5,10,15]); const d=s*ml/5;
+  return {q:`The dose is ${fmt(d)} mg. The oral suspension is ${s} mg in 5 ml. How many ml make one dose?`, a:ml, unit:"ml",
+    w:`${fmt(d)} mg ÷ ${s} mg × 5 ml = ${fmt(ml)} ml`};
+}
+function genQuantity(){
+  if(Math.random()<0.6){
+    const n=pick([1,2]), t=pick([1,2,3,4]), d=pick([5,7,14,28]); const a=n*t*d;
+    return {q:`Take ${n} ${n>1?"tablets":"tablet"} ${freq(t)} for ${d} days. How many tablets should be supplied?`, a, unit:"tablets",
+      w:`${n} × ${t} a day × ${d} days = ${a} tablets`};
+  }
+  const ml=pick([5,10]), t=pick([2,3,4]), d=pick([5,7,10]); const a=ml*t*d;
+  return {q:`Take ${ml} ml ${freq(t)} for ${d} days. How many ml should be supplied?`, a, unit:"ml",
+    w:`${ml} ml × ${t} a day × ${d} days = ${a} ml`};
+}
+function genPercent(){
+  const p=pick([0.5,1,2,5,10]);
+  if(Math.random()<0.5){
+    const v=pick([50,100,200,500]); const a=p*v/100;
+    return {q:`How many grams of drug are in ${v} ml of a ${fmt(p)}% w/v solution?`, a, unit:"g",
+      w:`${fmt(p)}% w/v means ${fmt(p)} g in 100 ml, so ${fmt(p)} × ${v} ÷ 100 = ${fmt(a)} g`};
+  }
+  const a=p*10;
+  return {q:`How many mg of drug are in 1 ml of a ${fmt(p)}% w/v solution?`, a, unit:"mg",
+    w:`${fmt(p)} g in 100 ml = ${fmt(p*1000)} mg in 100 ml, so ${fmt(a)} mg in 1 ml`};
+}
+function genRates(){
+  if(Math.random()<0.5){
+    const v=pick([250,500,1000]), h=pick([2,4,5,8,10]); const a=v/h;
+    return {q:`${v} ml is to be given over ${h} hours. What is the rate in ml per hour?`, a, unit:"ml/hr",
+      w:`Volume ÷ time: ${v} ml ÷ ${h} hours = ${fmt(a)} ml/hr`};
+  }
+  const kg=pick([10,12,15,20,25,30]), mgkg=pick([5,7.5,10,15]); const a=kg*mgkg;
+  return {q:`A child weighs ${kg} kg. The dose is ${fmt(mgkg)} mg/kg. What is the dose in mg?`, a, unit:"mg",
+    w:`Weight × dose per kg: ${kg} × ${fmt(mgkg)} = ${fmt(a)} mg`};
+}
+
+/* ---------- abbreviations & drug classes ---------- */
+const ABBR = [
+  ["od","once a day"],["bd","twice a day"],["tds","three times a day"],["qds","four times a day"],
+  ["prn","when required"],["nocte","at night"],["mane","in the morning"],["ac","before food"],
+  ["pc","after food"],["stat","immediately"],["po","by mouth"],["sc","subcutaneous (under the skin)"],
+  ["im","intramuscular (into a muscle)"],["iv","intravenous (into a vein)"],["pr","rectally"],
+  ["sl","sublingual (under the tongue)"],["top","topically (on the skin)"],["mdu","as directed"],
+  ["susp","suspension"],["qqh","every four hours"]
+];
+const DRUGS = [
+  ["amlodipine","Calcium channel blocker"],["ramipril","ACE inhibitor"],["lisinopril","ACE inhibitor"],
+  ["losartan","Angiotensin II receptor blocker"],["candesartan","Angiotensin II receptor blocker"],
+  ["bisoprolol","Beta blocker"],["atenolol","Beta blocker"],["atorvastatin","Statin"],["simvastatin","Statin"],
+  ["omeprazole","Proton pump inhibitor"],["lansoprazole","Proton pump inhibitor"],["metformin","Biguanide"],
+  ["gliclazide","Sulfonylurea"],["sertraline","SSRI antidepressant"],["citalopram","SSRI antidepressant"],
+  ["salbutamol","Short-acting beta2 agonist"],["amoxicillin","Penicillin antibiotic"],["flucloxacillin","Penicillin antibiotic"],
+  ["clarithromycin","Macrolide antibiotic"],["doxycycline","Tetracycline antibiotic"],["furosemide","Loop diuretic"],
+  ["ibuprofen","NSAID"],["naproxen","NSAID"],["prednisolone","Corticosteroid"],["cetirizine","Antihistamine"],
+  ["clopidogrel","Antiplatelet"],["apixaban","Anticoagulant"],["warfarin","Anticoagulant"],["levothyroxine","Thyroid hormone"],
+  ["codeine","Opioid analgesic"]
+];
+const SUFFIX = [
+  ["-pril","ACE inhibitor","ramipril, lisinopril"],["-sartan","Angiotensin II receptor blocker","losartan, candesartan"],
+  ["-olol","Beta blocker","bisoprolol, atenolol"],["-statin","Statin","atorvastatin, simvastatin"],
+  ["-prazole","Proton pump inhibitor","omeprazole, lansoprazole"],["-dipine","Calcium channel blocker","amlodipine, nifedipine"],
+  ["-cillin","Penicillin antibiotic","amoxicillin, flucloxacillin"],["-romycin","Macrolide antibiotic","clarithromycin, erythromycin"]
+];
+const CLASSES = [...new Set(DRUGS.map(d=>d[1]))];
+const cap1 = s => s.charAt(0).toUpperCase()+s.slice(1);
+function mc(q, correct, pool, w){
+  const others = shuffle(pool.filter(x=>x!==correct)).slice(0,3);
+  return {q, choices:shuffle([correct,...others]), correct, w};
+}
+function genAbbrev(){
+  const [ab,m] = pick(ABBR);
+  if(Math.random()<0.6) return mc(`What does “${ab}” mean on a prescription?`, cap1(m), ABBR.map(x=>cap1(x[1])), `${ab} = ${m}`);
+  return mc(`Which abbreviation means “${m}”?`, ab, ABBR.map(x=>x[0]), `${m} = ${ab}`);
+}
+function genClass(){
+  if(Math.random()<0.7){
+    const [d,c] = pick(DRUGS);
+    return mc(`Which drug class does ${d} belong to?`, c, CLASSES, `${cap1(d)} belongs to this class: ${c}.`);
+  }
+  const [s,c,ex] = pick(SUFFIX);
+  return mc(`Drug names ending in “${s}” are usually…`, c, CLASSES, `${s} usually means: ${c} (for example ${ex}).`);
+}
+
+/* ---------- catalogue ---------- */
+const CALC = [
+  {id:"units",   name:"Unit conversions", blurb:"g, mg, mcg, litres and ml", icon:"⚖️", c:"--teal",   free:true,  gen:genUnits},
+  {id:"tablets", name:"Tablets per dose", blurb:"How many tablets make a dose", icon:"💊", c:"--pink",   free:true,  gen:genTablets},
+  {id:"liquids", name:"Liquid doses",     blurb:"mg to ml with oral liquids", icon:"🧪", c:"--sky",    free:true,  gen:genLiquids},
+  {id:"qty",     name:"Quantities to supply", blurb:"Totals for a full course", icon:"📦", c:"--sun",   free:false, gen:genQuantity},
+  {id:"pct",     name:"Percentages and w/v",  blurb:"Grams and mg in solutions", icon:"💧", c:"--lime",  free:false, gen:genPercent},
+  {id:"rates",   name:"Rates and mg/kg",  blurb:"ml per hour and weight doses", icon:"📈", c:"--violet", free:false, gen:genRates},
+];
+const LEARN = [
+  {id:"flash",  name:"Abbreviation flashcards", blurb:"od, bd, prn, nocte and more", icon:"🃏", c:"--sky",  free:true,  run:()=>startFlash()},
+  {id:"abbrev", name:"Abbreviation quiz", blurb:"Read prescriptions with confidence", icon:"🔤", c:"--teal", free:true, run:()=>startQuiz({id:"abbrev",title:"Abbreviation quiz",c:"--teal",gen:genAbbrev,count:10})},
+  {id:"class",  name:"Drug class quiz", blurb:"Match drugs to their class", icon:"🧬", c:"--pink", free:false, run:()=>startQuiz({id:"class",title:"Drug class quiz",c:"--pink",gen:genClass,count:10})},
+];
+const TESTS = [
+  {id:"clock",   name:"Beat the clock", blurb:"60 seconds of mixed sums", icon:"⏱️", c:"--sun",    free:false, run:()=>startQuiz({id:"clock",title:"Beat the clock",c:"--sun",gen:genMixedCalc,mode:"clock"})},
+  {id:"exam",    name:"Mock exam", blurb:"15 questions, marked at the end", icon:"📝", c:"--violet", free:false, run:()=>startQuiz({id:"exam",title:"Mock exam",c:"--violet",gen:genMixedCalc,count:15,mode:"exam"})},
+  {id:"mistakes",name:"Review my mistakes", blurb:"", icon:"🔁", c:"--lime", free:false, run:()=>startMistakes()},
+];
+function genMixedCalc(){ const t=pick(CALC); const q=t.gen(); q.topic=t.id; return q; }
+function genDaily(){ return Math.random()<0.75 ? genMixedCalc() : Object.assign(genAbbrev(),{topic:"abbrev"}); }
+
+/* ---------- state ---------- */
+let S = store.get("dd2", null) || {xp:0, streak:0, lastDay:"", dailyDay:"", topics:{}, mistakes:[], clockBest:0, known:[]};
+let subscribed = store.get("dd-sub", false);
+const save = () => store.set("dd2", S);
+const today = () => new Date().toLocaleDateString("en-CA");
+const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return d.toLocaleDateString("en-CA"); };
+const levelOf = xp => Math.floor(xp/100)+1;
+const LEVEL_NAMES = ["Starter","Counter assistant","Dispensing assistant","Trainee technician","Calculation checker","Senior trainee","Accuracy star","Dose master"];
+const unlocked = t => t.free || subscribed;
+function colour(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* ---------- home ---------- */
+function tile(t, onClick){
+  const b=document.createElement("button"); b.type="button"; b.className="cap";
+  b.style.setProperty("--c", `var(${t.c})`);
+  const st=S.topics[t.id];
+  const pct = st && st.total ? Math.round(st.right/st.total*100) : 0;
+  let tag = unlocked(t) ? (st && st.total ? pct+"%" : "") : "£1/mo";
+  if(t.id==="clock" && unlocked(t) && S.clockBest) tag = "Best "+S.clockBest;
+  if(t.id==="mistakes" && unlocked(t)) tag = S.mistakes.length ? S.mistakes.length+" saved" : "";
+  const blurb = t.id==="mistakes" ? (S.mistakes.length ? "Practise the questions you missed" : "Missed questions will appear here") : t.blurb;
+  b.innerHTML = `<span class="end" aria-hidden="true">${unlocked(t)?t.icon:"🔒"}</span>
+    <span class="txt"><span class="t">${t.name}</span><span class="s">${blurb}</span></span>
+    <span class="tag ${unlocked(t)?"":"lock"}">${tag}</span>
+    ${st && st.total ? `<span class="ring"><i style="width:${pct}%"></i></span>`:""}`;
+  b.onclick = () => unlocked(t) ? onClick() : openSheet();
+  return b;
+}
+function renderHome(){
+  const lv=levelOf(S.xp), into=S.xp%100;
+  $("lvNum").textContent=lv;
+  $("lvName").textContent=`Level ${lv}: ${LEVEL_NAMES[Math.min(lv-1,LEVEL_NAMES.length-1)]}`;
+  $("xpText").textContent=`${into} / 100 XP to level ${lv+1}`;
+  requestAnimationFrame(()=>{ $("xpFill").style.width=into+"%"; });
+  const alive = S.lastDay===today() || S.lastDay===yesterday();
+  $("streakNum").textContent = alive ? S.streak : 0;
+  $("planBtn").textContent = subscribed ? "Premium ✓" : "Free plan";
+  $("planBtn").classList.toggle("pro", subscribed);
+
+  const done = S.dailyDay===today();
+  $("dailyCard").classList.toggle("done", done);
+  $("dailyTitle").textContent = done ? "Challenge complete" : "Today's challenge";
+  $("dailyText").textContent = done ? "Nice work. Come back tomorrow for a new one and keep your streak alive."
+    : "Five mixed questions from every topic. Finish it to keep your streak going and earn 30 bonus XP.";
+  $("dailyBtn").textContent = done ? "Play again for practice" : "Start challenge";
+
+  const g1=$("calcGrid"), g2=$("learnGrid"), g3=$("testGrid"); g1.innerHTML=g2.innerHTML=g3.innerHTML="";
+  CALC.forEach(t=>g1.appendChild(tile(t,()=>startQuiz({id:t.id,title:t.name,c:t.c,gen:()=>Object.assign(t.gen(),{topic:t.id}),count:10}))));
+  LEARN.forEach(t=>g2.appendChild(tile(t,t.run)));
+  TESTS.forEach(t=>g3.appendChild(tile(t,t.run)));
+  show("home");
+}
+const TABBED=["home","help","account","policy"];
+function show(id){
+  ["home","quiz","flash","results","help","account","policy"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
+  $("tabbar").classList.toggle("hidden", !TABBED.includes(id));
+  const tabFor = id==="policy" ? "account" : id;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.tab===tabFor));
+  window.scrollTo(0,0);
+}
+
+/* ---------- xp, streaks, rewards ---------- */
+function addXP(n){
+  const before=levelOf(S.xp); S.xp+=n; save();
+  if(levelOf(S.xp)>before){ toast(`Level ${levelOf(S.xp)} reached! 🎉`); confetti(140); }
+}
+function markDay(){
+  const t=today(); if(S.lastDay===t) return;
+  S.streak = S.lastDay===yesterday() ? S.streak+1 : 1; S.lastDay=t; save();
+  if(S.streak>1) toast(`🔥 ${S.streak} day streak`);
+}
+let toastTimer;
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(e=>e.remove());
+  const d=document.createElement("div"); d.className="toast"; d.textContent=msg; document.body.appendChild(d);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>d.remove(),2400);
+}
+const cv=$("confetti"), cx=cv.getContext("2d"); let parts=[], raf=null;
+function confetti(n=90){
+  if(reduceMotion) return;
+  cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio; cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  const cols=["--teal","--violet","--sun","--pink","--sky","--lime","--gold","--gold"].map(colour);
+  for(let i=0;i<n;i++) parts.push({x:innerWidth/2+(Math.random()-.5)*80, y:innerHeight*0.35, vx:(Math.random()-.5)*12, vy:-Math.random()*12-4,
+    w:6+Math.random()*8, h:4+Math.random()*4, r:Math.random()*6, vr:(Math.random()-.5)*.3, c:pick(cols), life:0, pill:Math.random()<.4});
+  if(!raf) raf=requestAnimationFrame(tick);
+}
+function tick(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts.forEach(p=>{ p.vy+=0.35; p.vx*=0.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life++;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c; cx.globalAlpha=Math.max(0,1-p.life/110);
+    if(p.pill){ cx.beginPath(); cx.roundRect ? cx.roundRect(-p.w,-p.h/1.5,p.w*2,p.h*1.4,p.h) : cx.rect(-p.w,-p.h/1.5,p.w*2,p.h*1.4); cx.fill(); }
+    else cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    cx.restore(); });
+  parts=parts.filter(p=>p.life<110 && p.y<innerHeight+40);
+  raf = parts.length ? requestAnimationFrame(tick) : (cx.clearRect(0,0,innerWidth,innerHeight), null);
+}
+
+/* ---------- quiz engine ---------- */
+let Q=null;
+function startQuiz(cfg){
+  Q = Object.assign({mode:"practice", count:10, i:0, results:[], log:[], xp:0, cur:null, answered:false, list:null}, cfg);
+  const q=$("quiz"); q.style.setProperty("--c",`var(${Q.c})`);
+  $("qTitle").textContent=Q.title;
+  $("clockWrap").classList.toggle("hidden", Q.mode!=="clock");
+  $("qCount").classList.toggle("hidden", Q.mode==="clock");
+  $("dots").classList.toggle("hidden", Q.mode==="clock");
+  show("quiz");
+  if(Q.mode==="clock"){ Q.end=performance.now()+60000; clockLoop(); }
+  nextQ();
+}
+function clockLoop(){
+  if(!Q || Q.mode!=="clock") return;
+  const left=Math.max(0,Q.end-performance.now());
+  $("clockNum").textContent=Math.ceil(left/1000);
+  $("clockArc").style.strokeDashoffset = 169.6*(1-left/60000);
+  if(left<=0){ return finishQuiz(); }
+  Q.timer=requestAnimationFrame(clockLoop);
+}
+function nextQ(){
+  if(Q.mode!=="clock" && Q.i>=Q.count) return finishQuiz();
+  Q.cur = Q.list ? Q.list[Q.i] : Q.gen();
+  Q.answered=false;
+  $("qCount").textContent = `${Q.i+1} of ${Q.count}`;
+  if(Q.mode==="clock") $("qCount").textContent="";
+  $("qText").textContent=Q.cur.q;
+  const isMC=!!Q.cur.choices;
+  $("numForm").classList.toggle("hidden",isMC);
+  $("choices").classList.toggle("hidden",!isMC);
+  if(isMC){
+    const box=$("choices"); box.innerHTML="";
+    Q.cur.choices.forEach(ch=>{ const b=document.createElement("button"); b.type="button"; b.className="choice"; b.textContent=ch;
+      b.onclick=()=>answer(ch,b); box.appendChild(b); });
+  } else {
+    $("qUnit").textContent=Q.cur.unit; $("ansInput").value=""; $("ansInput").disabled=false; $("checkBtn").disabled=false;
+  }
+  $("feedback").className="feedback hidden"; $("nextBtn").classList.add("hidden");
+  const card=$("card"); card.classList.remove("enter","shake"); void card.offsetWidth; card.classList.add("enter");
+  renderDots();
+  if(!isMC) setTimeout(()=>$("ansInput").focus(),50);
+}
+function renderDots(){
+  const d=$("dots"); d.innerHTML="";
+  for(let k=0;k<Q.count;k++){ const i=document.createElement("i");
+    if(k<Q.results.length) i.className = Q.mode==="exam" ? "done" : (Q.results[k]?"ok":"bad");
+    else if(k===Q.i) i.className="now"; d.appendChild(i); }
+}
+function isRight(given){
+  if(Q.cur.choices) return given===Q.cur.correct;
+  const v=Number(given), a=Q.cur.a; return Math.abs(v-a) <= Math.max(0.001, Math.abs(a)*0.005);
+}
+function answer(given, btn){
+  if(Q.answered) return;
+  if(!Q.cur.choices){
+    const raw=String(given).trim().replace(",",".");
+    if(raw===""||isNaN(Number(raw))){ const fb=$("feedback"); fb.className="feedback bad"; fb.innerHTML="<p>Enter a number, for example 2.5</p>"; return; }
+    given=raw;
+  }
+  Q.answered=true;
+  const ok=isRight(given);
+  Q.results.push(ok); Q.log.push({q:Q.cur, given, ok});
+  const key=Q.cur.topic||Q.id;
+  const st=S.topics[key]||{right:0,total:0}; st.total++; if(ok) st.right++; S.topics[key]=st;
+  if(ok){ Q.xp+=10; S.mistakes=S.mistakes.filter(m=>m.q!==Q.cur.q); }
+  else if(!S.mistakes.some(m=>m.q===Q.cur.q)){ S.mistakes.unshift(Q.cur); S.mistakes=S.mistakes.slice(0,40); }
+  save();
+  Q.i++;
+
+  const answerText = Q.cur.choices ? Q.cur.correct : `${fmt(Q.cur.a)} ${Q.cur.unit}`;
+  if(Q.cur.choices){
+    document.querySelectorAll("#choices .choice").forEach(b=>{ b.disabled=true;
+      if(Q.mode==="exam"){ if(b===btn) b.classList.add("picked"); }
+      else { if(b.textContent===Q.cur.correct) b.classList.add("right"); else if(b===btn) b.classList.add("wrong"); } });
+  } else { $("ansInput").disabled=true; $("checkBtn").disabled=true; }
+
+  if(Q.mode==="exam"){ renderDots(); return setTimeout(nextQ, 250); }
+  if(!ok && !reduceMotion){ const c=$("card"); c.classList.remove("enter","shake"); void c.offsetWidth; c.classList.add("shake"); }
+  if(Q.mode==="clock"){
+    const fb=$("feedback"); fb.className="feedback "+(ok?"ok":"bad");
+    fb.innerHTML = `<p><strong>${ok?"Correct":"Answer: "+answerText}</strong> · Score ${Q.results.filter(Boolean).length}</p>`;
+    return setTimeout(()=>{ if(Q && Q.mode==="clock" && performance.now()<Q.end) nextQ(); }, ok?450:1300);
+  }
+  const fb=$("feedback"); fb.className="feedback "+(ok?"ok":"bad");
+  fb.innerHTML = `<p><strong>${ok?"Correct!":"Not quite. The answer is "+answerText+"."}</strong>${ok?'<span class="xp-pop">+10 XP</span>':""}</p><p class="working">${Q.cur.w}</p>`;
+  renderDots();
+  const nb=$("nextBtn"); nb.textContent = Q.i>=Q.count ? "See my score" : "Next question"; nb.classList.remove("hidden"); nb.focus();
+}
+function finishQuiz(){
+  cancelAnimationFrame(Q.timer);
+  const right=Q.results.filter(Boolean).length, total=Q.results.length;
+  const r=$("results"); r.style.setProperty("--c",`var(${Q.c})`);
+  $("rTitle").textContent=Q.title;
+  let bonus=0;
+  if(Q.mode==="clock"){
+    $("rScore").textContent=right;
+    const best = right>S.clockBest; if(best) S.clockBest=right;
+    $("rMsg").textContent = best ? "New personal best! Can you beat it?" : `correct in 60 seconds. Your best is ${S.clockBest}.`;
+    if(best && right>0) confetti(120);
+  } else {
+    $("rScore").textContent=`${right}/${total}`;
+    const pct = total ? right/total : 0;
+    $("rMsg").textContent = pct===1 ? "Full marks. Brilliant work." : pct>=.8 ? "Strong round. Go again to lock it in." : pct>=.5 ? "Getting there. Read the working on the ones you missed." : "Keep going. Slow down and write out each step.";
+    if(pct>=.7) confetti(pct===1?160:90);
+  }
+  if(Q.mode==="daily" && S.dailyDay!==today()){ S.dailyDay=today(); bonus=30; }
+  markDay();
+  addXP(Q.xp+bonus);
+  $("rXp").textContent = `+${Q.xp+bonus} XP${bonus?" (including 30 daily bonus)":""}`;
+  const rv=$("rReview"); rv.innerHTML="";
+  if(Q.mode==="exam"){
+    Q.log.forEach((l,k)=>{ const li=document.createElement("li"); li.className=l.ok?"ok":"bad";
+      const ans = l.q.choices ? l.q.correct : `${fmt(l.q.a)} ${l.q.unit}`;
+      li.innerHTML=`<strong>${k+1}. ${l.q.q}</strong><br>${l.ok?"✅ Correct":`❌ You said ${l.given}${l.q.unit?" "+l.q.unit:""}. Answer: ${ans}`}<div class="w">${l.q.w}</div>`;
+      rv.appendChild(li); });
+  }
+  const cfg={id:Q.id,title:Q.title,c:Q.c,gen:Q.gen,count:Q.count,mode:Q.mode,list:null};
+  $("rAgain").onclick = () => Q && Q.id==="mistakes" ? startMistakes() : startQuiz(cfg);
+  Q.mode=null; save();
+  show("results");
+}
+function startMistakes(){
+  if(!S.mistakes.length){ toast("No saved mistakes. Nice!"); return renderHome(); }
+  const list=shuffle(S.mistakes).slice(0,10);
+  startQuiz({id:"mistakes",title:"Review my mistakes",c:"--lime",list,count:list.length});
+}
+
+/* ---------- flashcards ---------- */
+let F=null;
+function startFlash(){
+  const unknown=ABBR.filter(a=>!S.known.includes(a[0])); const deck=shuffle(unknown.length?unknown:ABBR);
+  F={deck,i:0,knew:0}; $("flash").style.setProperty("--c","var(--sky)"); show("flash"); showCard();
+}
+function showCard(){
+  if(F.i>=F.deck.length){
+    addXP(F.knew*5); markDay();
+    $("results").style.setProperty("--c","var(--sky)");
+    $("rTitle").textContent="Abbreviation flashcards"; $("rScore").textContent=`${F.knew}/${F.deck.length}`;
+    $("rMsg").textContent = F.knew===F.deck.length ? "You know them all. Try the abbreviation quiz next." : "Cards you're still learning will come back first next time.";
+    $("rXp").textContent=`+${F.knew*5} XP`; $("rReview").innerHTML=""; $("rAgain").onclick=startFlash;
+    if(F.knew>=F.deck.length*.7) confetti(90);
+    return show("results");
+  }
+  const [a,m]=F.deck[F.i]; $("flipCard").classList.remove("on");
+  setTimeout(()=>{ $("fFront").textContent=a; $("fBack").innerHTML=`${cap1(m)}<small>${a}</small>`; }, reduceMotion?0:180);
+  $("flashCount").textContent=`${F.i+1} of ${F.deck.length}`;
+}
+function flipCard(){ $("flipCard").classList.toggle("on"); }
+$("flipCard").onclick=flipCard;
+$("flipCard").onkeydown=e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); flipCard(); } };
+$("knewBtn").onclick=()=>{ const a=F.deck[F.i][0]; if(!S.known.includes(a)) S.known.push(a); if(S.known.length>=ABBR.length) S.known=[]; F.knew++; F.i++; save(); showCard(); };
+$("stillBtn").onclick=()=>{ const a=F.deck[F.i][0]; S.known=S.known.filter(x=>x!==a); F.i++; save(); showCard(); };
+$("flashBack").onclick=renderHome;
+
+/* ---------- sheet ---------- */
+function openSheet(){ $("sheetBg").classList.remove("hidden"); $("payBtn").focus(); }
+function closeSheet(){ $("sheetBg").classList.add("hidden"); }
+$("copyBtn").onclick = async () => {
+  const inp=$("payUrl"); inp.select(); inp.setSelectionRange(0,999); let ok=false;
+  try{ await navigator.clipboard.writeText(PAYMENT_LINK); ok=true; }catch(e){ try{ ok=document.execCommand("copy"); }catch(e2){} }
+  $("copyBtn").textContent = ok ? "Copied" : "Select and copy";
+};
+$("unlockBtn").onclick=()=>{ subscribed=true; store.set("dd-sub",true); closeSheet(); toast("Premium unlocked. Enjoy! 🎉"); confetti(120); renderHome(); };
+$("closeSheet").onclick=closeSheet;
+$("sheetBg").onclick=e=>{ if(e.target.id==="sheetBg") closeSheet(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+$("planBtn").onclick=openSheet;
+
+/* ---------- wiring ---------- */
+$("numForm").onsubmit=e=>{ e.preventDefault(); answer($("ansInput").value); };
+$("nextBtn").onclick=nextQ;
+$("quitBtn").onclick=()=>{ if(Q){ cancelAnimationFrame(Q.timer); Q.mode=null; } renderHome(); };
+$("rHome").onclick=renderHome;
+$("dailyBtn").onclick=()=>startQuiz({id:"daily",title:"Today's challenge",c:"--violet",gen:genDaily,count:5,mode:"daily"});
+/* ================= Account ================= */
+const PORTAL_LINK = "https://billing.stripe.com/p/login/3cIcN7fC4cGkcsS27E4Ja00"; // Stripe customer portal link (https://billing.stripe.com/p/login/...)
+const OWNER_EMAIL = "aryanamin1361@gmail.com";
+
+function renderAccount(){
+  const pro=subscribed;
+  $("planBig").classList.toggle("pro",pro);
+  $("planIcon").textContent = pro ? "⭐" : "🌱";
+  $("planName").textContent = pro ? "Premium" : "Free plan";
+  $("planSub").textContent = pro ? "£1 a month · all topics unlocked" : "3 calculation topics, flashcards and the daily challenge";
+  const pa=$("planActions"); pa.innerHTML="";
+  if(!pro){ const b=document.createElement("button"); b.className="btn color"; b.type="button"; b.textContent="Go premium for £1 a month"; b.onclick=openSheet; pa.appendChild(b); }
+  const answered=Object.values(S.topics).reduce((n,t)=>n+t.total,0);
+  $("progressSummary").textContent = `Level ${levelOf(S.xp)}, ${S.xp} XP, ${answered} questions answered. Progress is saved on this device only.`;
+  show("account");
+}
+function openPortal(){
+  if(PORTAL_LINK){ const a=document.createElement("a"); a.href=PORTAL_LINK; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove(); return; }
+  openHelp("cancel");
+}
+
+$("restoreBtn").onclick=()=>openHelp("unlock");
+$("refundBtn").onclick=()=>openHelp("refund");
+$("resetBtn").onclick=()=>{
+  if(!confirm("Reset all progress on this device? Your XP, streak, scores and saved mistakes will be deleted. Your subscription is not affected.")) return;
+  S={xp:0, streak:0, lastDay:"", dailyDay:"", topics:{}, mistakes:[], clockBest:0, known:[]}; save(); toast("Progress reset"); renderAccount();
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-policy]"); if(!b) return;
+  closeSheet(); openPolicy(b.dataset.policy);
+});
+$("policyBack").onclick=renderAccount;
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  const id=t.dataset.tab; if(id==="home") renderHome(); else if(id==="account") renderAccount(); else openHelp();
+});
+
+/* ================= Policies ================= */
+const UPDATED="Last updated: 25 September 2026";
+const POLICIES={
+terms:`<h2>Terms of service</h2><p class="updated">${UPDATED}</p>
+<p>These terms explain the rules for using Dose Drill ("the app", "we", "us"), a learning app for trainee pharmacy technicians run from the United Kingdom. By using the app or buying a subscription, you agree to these terms. Please read them together with our Cancellation and refund policy and our Privacy policy.</p>
+<h3>1. Who we are</h3>
+<p>Dose Drill is operated by an individual trader based in the United Kingdom. You can reach us at ${OWNER_EMAIL}. Most questions can be answered straight away by the Help assistant in the app.</p>
+<h3>2. Who can use the app</h3>
+<p>The free version is open to anyone. To buy a subscription you must be 18 or over, or have permission from a parent or guardian who agrees to these terms on your behalf.</p>
+<h3>3. What the app is for</h3>
+<p>Dose Drill is an educational tool that helps you practise pharmacy calculations, abbreviations and drug classes. It is not clinical, medical or professional advice, and it is not a substitute for your training provider, the BNF, your employer's standard operating procedures or the judgement of a registered pharmacist. Never use an answer from the app to make a decision about a real patient's medicine.</p>
+<p>We take care to make questions and answers accurate, but we cannot guarantee that all content is free from errors. If you think something is wrong, please tell us through the Help assistant so we can check and correct it.</p>
+<h3>4. Free and premium features</h3>
+<p>Some features are free. Others ("premium") need a paid subscription. We may add, change or remove features over time to improve the app. If we remove a major premium feature, you can cancel and we will consider a refund for the unused part of that month.</p>
+<h3>5. Subscriptions and payment</h3>
+<ul>
+<li>Premium costs £1 a month, including any VAT that applies. The price is shown before you pay.</li>
+<li>Your subscription starts on the day you pay and renews automatically every month on the same date until you cancel.</li>
+<li>Payments are processed by Stripe. We never see or store your full card details.</li>
+<li>If a payment fails, premium access may be paused until payment succeeds.</li>
+<li>If we change the price, we will give you at least 30 days' notice before the new price applies to you. You can cancel before the change takes effect.</li>
+</ul>
+<h3>6. Your right to cancel</h3>
+<p>You can cancel future payments at any time from the Account tab. When you subscribe, you ask us to give you access to digital content straight away. Under the Consumer Contracts Regulations 2013, this means you lose the usual 14-day right to cancel for a refund once premium has been unlocked. Full details are in our Cancellation and refund policy. This does not affect your other legal rights, including your rights if the app is faulty.</p>
+<h3>7. Access on your device</h3>
+<p>Premium is unlocked on the device and browser where you use the app. Progress and premium status are stored on your device. If you clear your browser data or change device, you can restore premium from the Account tab. Your progress cannot be recovered once deleted.</p>
+<h3>8. Fair use</h3>
+<p>You agree not to:</p>
+<ul>
+<li>share, resell or give away access to premium features;</li>
+<li>unlock premium without a paid subscription, or try to get around payment in any other way;</li>
+<li>copy, scrape or republish the app's questions or content;</li>
+<li>interfere with the app, or use it in a way that breaks the law.</li>
+</ul>
+<p>If you break these rules, we may end your access. If you used premium without paying, we may ask you to pay for that use.</p>
+<h3>9. Our content</h3>
+<p>The app, its design, questions and explanations belong to us. You may use them for your own personal study only.</p>
+<h3>10. Our responsibility to you</h3>
+<p>If we fail to follow these terms, we are responsible for loss or damage you suffer that is a foreseeable result of that failure. We are not responsible for loss that was not foreseeable, for business losses, or for any loss caused by using app content in real clinical practice, which the app is not designed for. Our total liability to you will not be more than the amount you have paid us in the 12 months before the claim. Nothing in these terms limits our liability for death or personal injury caused by our negligence, for fraud, or for anything else that cannot legally be limited.</p>
+<h3>11. Ending these terms</h3>
+<p>You can stop using the app and cancel your subscription at any time. We may suspend or close the app, or end your access, with reasonable notice. If we close premium for everyone, we will stop charging you and refund any payment covering time after the closure.</p>
+<h3>12. Changes to these terms</h3>
+<p>We may update these terms to reflect changes in the law or in the app. We will show the date of the latest version at the top. If a change significantly affects you, we will tell you in the app before it takes effect.</p>
+<h3>13. Law and disputes</h3>
+<p>These terms are governed by the law of England and Wales. You can bring legal proceedings in the courts of England and Wales, or, if you live in Scotland or Northern Ireland, in the courts where you live. We will always try to resolve any problem with you directly first.</p>`,
+
+refunds:`<h2>Cancellation and refund policy</h2><p class="updated">${UPDATED}</p>
+<p>This policy explains how to cancel your Dose Drill subscription and when you can get a refund. It forms part of our Terms of service.</p>
+<h3>1. Cancelling your subscription</h3>
+<ul>
+<li>You can cancel at any time from <strong>Account › Manage or cancel subscription</strong>. There is no cancellation fee and you don't need to give a reason.</li>
+<li>Cancelling stops future payments. You keep premium until the end of the month you have already paid for, then your account returns to the free plan.</li>
+<li>Your practice progress is kept on your device after you cancel.</li>
+<li>If you need help, the Help assistant in the app will guide you step by step.</li>
+</ul>
+<h3>2. Your 14-day cancellation right</h3>
+<p>Under UK consumer law, you normally have 14 days to cancel a contract bought online. For digital content, this right ends once you have agreed to start using the content straight away. When you subscribe, you ask for premium to start immediately and confirm that you understand this. This means payments are not normally refundable once premium has been unlocked.</p>
+<h3>3. When we will give a refund</h3>
+<p>We will refund you in full in these situations:</p>
+<ul>
+<li>you were charged by mistake, for example twice for the same month;</li>
+<li>you were charged after you had already cancelled;</li>
+<li>a fault in the app stopped you using premium, and we could not fix it within a reasonable time;</li>
+<li>we closed premium or removed a major premium feature during a month you had paid for.</li>
+</ul>
+<p>We do not refund partial months, months where premium was available but not used, or charges you did not ask us about within 60 days of payment, unless the law requires us to.</p>
+<h3>4. How to ask for a refund</h3>
+<ol>
+<li>Open the <strong>Help</strong> tab and choose <strong>Request a refund</strong>, or go to <strong>Account › Request a refund</strong>.</li>
+<li>The assistant will ask for the email you used at checkout and the reason for your request.</li>
+<li>Your request is reviewed by a person. We aim to reply within 5 working days.</li>
+</ol>
+<h3>5. How refunds are paid</h3>
+<p>Approved refunds are paid to the card or payment method you used, through Stripe. They usually appear within 5 to 10 working days, depending on your bank.</p>
+<h3>6. Your legal rights</h3>
+<p>Nothing in this policy affects your legal rights under the Consumer Rights Act 2015, including your right to a repair, replacement or refund if digital content is faulty. For more information, contact Citizens Advice.</p>`,
+
+privacy:`<h2>Privacy policy</h2><p class="updated">${UPDATED}</p>
+<p>This policy explains what information Dose Drill uses, why, and your rights under UK data protection law (the UK GDPR and the Data Protection Act 2018). Dose Drill is the controller of personal data described here. Contact: ${OWNER_EMAIL}.</p>
+<h3>1. The short version</h3>
+<p>We collect as little as possible. Your practice progress stays on your device. Payments are handled by Stripe. We don't sell your data, show ads, or use tracking cookies.</p>
+<h3>2. Information stored on your device</h3>
+<p>Your XP, level, streak, scores, saved mistakes, flashcard progress and premium status are saved in your browser's local storage. This information is not sent to us. You can delete it at any time from <strong>Account › Reset all progress</strong>, or by clearing your browser data.</p>
+<h3>3. Payment information</h3>
+<p>When you subscribe, Stripe collects your name, email, card details and billing country to take payment and prevent fraud. Stripe shares with us your email, the amount paid, and the date and status of your subscription, so we can manage billing and refunds. We never receive your full card number. Stripe uses your data under its own privacy policy at stripe.com/gb/privacy.</p>
+<h3>4. The Help assistant</h3>
+<p>The Help assistant runs inside the app. Messages you type are used only to show you answers on your device and are not stored by us. If you send a refund request, the details you choose to include (your checkout email, the reason and any notes) are sent to us by email so a person can review the request.</p>
+<h3>5. Why we use your information</h3>
+<ul>
+<li>To provide the app and your subscription (to carry out our contract with you).</li>
+<li>To process payments, refunds and billing questions (contract, and our legal duty to keep financial records).</li>
+<li>To prevent fraud and misuse (our legitimate interest in protecting the app).</li>
+</ul>
+<h3>6. How long we keep it</h3>
+<p>We keep refund request emails for up to 2 years. Payment records are kept for 6 years, as UK tax law requires. On-device data stays until you delete it.</p>
+<h3>7. Hosting</h3>
+<p>The app is hosted on claude.ai, a platform run by Anthropic. When you open the app, Anthropic may process technical information such as your IP address and device type to deliver the page securely, under its own privacy policy.</p>
+<h3>8. Your rights</h3>
+<p>You have the right to ask for a copy of your data, to have it corrected or deleted, to object to or restrict how we use it, and to data portability. To use these rights, contact us at the email above. We will reply within one month. You also have the right to complain to the Information Commissioner's Office (ico.org.uk).</p>
+<h3>9. Children</h3>
+<p>The app is designed for adults in pharmacy training. We do not knowingly collect personal data from children under 13.</p>
+<h3>10. Changes</h3>
+<p>If we change this policy, we will update the date at the top and tell you in the app if the change is significant.</p>`
+};
+function openPolicy(k){ $("policyBody").innerHTML=POLICIES[k]; show("policy"); }
+
+/* ================= Help assistant ================= */
+const chat=$("chat"); let started=false, R=null;
+const MENU=["Cancel my subscription","Request a refund","Premium isn't unlocked","Payment page won't open","Change my card","How does XP work?"];
+const esc = t => String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function scrollChat(){ window.scrollTo({top:document.body.scrollHeight, behavior:reduceMotion?"auto":"smooth"}); }
+function me(text){ const d=document.createElement("div"); d.className="msg me"; d.textContent=text; chat.appendChild(d); scrollChat(); }
+function clearChips(){ chat.querySelectorAll(".chips").forEach(c=>c.remove()); }
+function bot(html, chips){
+  clearChips();
+  const t=document.createElement("div"); t.className="typing"; t.innerHTML="<i></i><i></i><i></i>"; chat.appendChild(t); scrollChat();
+  setTimeout(()=>{
+    t.remove();
+    const d=document.createElement("div"); d.className="msg bot"; d.innerHTML=html; chat.appendChild(d);
+    if(chips && chips.length){ const c=document.createElement("div"); c.className="chips";
+      chips.forEach(x=>{ const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=x; b.onclick=()=>{ me(x); route(x); }; c.appendChild(b); });
+      chat.appendChild(c); }
+    scrollChat();
+  }, reduceMotion?50:650);
+}
+function openHelp(intent){
+  show("help");
+  if(!started){ started=true; if(!intent) return bot("<p>Hi! I'm the Dose Drill help assistant. I can help with your subscription, cancelling, refunds and using the app.</p><p>What do you need help with?</p>", MENU); }
+  if(intent){ R=null; route(intent); }
+}
+const say = {
+  menu(){ bot("<p>Anything else I can help with?</p>", MENU); },
+  cancel(){
+    const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
+    bot(`<p>You can cancel any time and there's no fee.</p>
+      <p>${PORTAL_LINK ? "Tap the button below, enter the email you used at checkout, and you'll get a login code. Then choose <strong>Cancel subscription</strong>." : "Open the payment receipt email from Stripe and use the <strong>manage subscription</strong> link in it, then choose <strong>Cancel subscription</strong>."}</p>
+      <p>You'll keep premium until the end of the month you've paid for, and no more payments will be taken.</p>${btn}`,
+      ["That worked, thanks","I can't cancel","Request a refund"]);
+  },
+  cantCancel(){ R={step:"reason", reason:"Could not cancel subscription – please cancel for me"}; R.step="email";
+    bot("<p>Sorry about that. I'll pass it on so your subscription is cancelled for you.</p><p>What email address did you use at checkout?</p>"); },
+  refundStart(){ R={step:"reason"};
+    bot(`<p>I can start a refund request. A person reviews every request, usually within 5 working days.</p>
+      <p>Refunds are given for mistaken or duplicate charges, charges after cancelling, or a fault that stopped premium working. Partial months aren't refunded (see our <button class="linkbtn" style="padding:0" type="button" data-policy="refunds">refund policy</button>).</p><p>What's the reason?</p>`,
+      ["I was charged by mistake","I was charged twice","Charged after cancelling","Premium didn't work","Something else"]); },
+  unlock(){ bot(`<p>After paying, premium needs unlocking once on each device:</p><p>Go to <strong>Account</strong>, tap <strong>Restore premium on this device</strong>, then <strong>Unlock premium</strong>.</p>`,
+      ["Unlock premium","It still doesn't work","Back to menu"]); },
+  pay(){ bot(`<p>Some browsers block the payment page from opening inside the app. Copy this link and paste it into your browser instead:</p><pre>${PAYMENT_LINK}</pre>`, ["Copy the link","Back to menu"]); },
+  card(){ const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
+    bot(`<p>You can update your card, see past payments and download receipts in your subscription settings.</p>${PORTAL_LINK?"":"<p>Use the <strong>manage subscription</strong> link in your Stripe receipt email.</p>"}${btn}`, ["Back to menu"]); },
+  xp(){ bot("<p>You earn <strong>10 XP</strong> for each correct answer and <strong>30 bonus XP</strong> for finishing today's challenge. Every 100 XP takes you up a level.</p><p>Your streak grows each day you finish a round, and resets if you miss a day.</p>", ["Back to menu"]); },
+  data(){ bot("<p>Your progress is saved on this device only, so clearing your browser data or switching device will reset it. Your subscription isn't affected.</p><p>You can reset progress yourself in <strong>Account</strong>. Details are in our <button class=\"linkbtn\" style=\"padding:0\" type=\"button\" data-policy=\"privacy\">privacy policy</button>.</p>", ["Back to menu"]); },
+  price(){ bot("<p>Premium is <strong>£1 a month</strong>. It unlocks the advanced calculations, drug class quiz, Beat the clock, mock exams and mistake review. Cancel any time.</p>", ["Go premium","Back to menu"]); },
+  wrong(){ bot("<p>Thanks for flagging it. Accuracy matters a lot here. Please tell me which question looked wrong and why, and I'll pass it on for checking.</p>"); R={step:"report"}; },
+  fallback(){ bot("<p>I'm not sure I understood that. Here's what I can help with:</p>", [...MENU,"A question looks wrong","Talk to a person"]); },
+  person(){ R={step:"email", reason:"General support request"}; bot("<p>No problem. I'll pass your message to the owner.</p><p>What's your email address, so they can reply?</p>"); }
+};
+function sendRequest(){
+  const subject = `Dose Drill: ${R.reason}`;
+  const body = `Request type: ${R.reason}\nCheckout email: ${R.email}\nDetails: ${R.details||"None given"}\nSent: ${new Date().toLocaleString("en-GB")}`;
+  const href = `mailto:${OWNER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  bot(`<p>Here's your request. Tap <strong>Send request</strong> to send it from your email app.</p><pre>${esc(body)}</pre><a class="btn color" href="${href}" target="_blank" rel="noopener">Send request</a><p style="margin-top:10px">A person will review it and reply to ${esc(R.email)}, usually within 5 working days. If the button doesn't open your email, send the text above to ${OWNER_EMAIL}.</p>`, ["Back to menu"]);
+  R=null;
+}
+function route(text){
+  const t=text.toLowerCase().trim();
+  if(/^back to menu$|^menu$|that worked/.test(t)){ R=null; return t.includes("worked") ? bot("<p>Great, glad that sorted it.</p>",MENU) : say.menu(); }
+  if(R){
+    if(R.step==="reason"){ R.reason = "Refund request – "+text; R.step="email"; return bot("<p>Thanks. What email address did you use at checkout?</p>"); }
+    if(R.step==="email"){
+      if(!/^\S+@\S+\.\S+$/.test(text.trim())) return bot("<p>That doesn't look like an email address. Please type the email you used at checkout, for example name@example.com.</p>");
+      R.email=text.trim(); R.step="details"; return bot("<p>Anything else we should know? For example, the payment date or what went wrong.</p>", ["No, that's all"]); }
+    if(R.step==="details"){ if(!/^no, that's all$/.test(t)) R.details=text; return sendRequest(); }
+    if(R.step==="report"){ R={step:"email", reason:"Possible error in a question", details:text}; R.step="emailReport";
+      return bot("<p>Thanks, that's really helpful. If you'd like a reply, type your email. Otherwise tap Skip.</p>", ["Skip"]); }
+    if(R.step==="emailReport"){ if(t!=="skip" && /^\S+@\S+\.\S+$/.test(text.trim())) R.email=text.trim(); else R.email="(no reply needed)"; return sendRequest(); }
+  }
+  if(t==="unlock premium"){ subscribed=true; store.set("dd-sub",true); confetti(120); return bot("<p>Premium is unlocked on this device. Enjoy! 🎉</p>", ["Back to menu"]); }
+  if(t==="copy the link"){ try{ navigator.clipboard.writeText(PAYMENT_LINK); return bot("<p>Copied. Paste it into your browser's address bar.</p>",["Back to menu"]); }catch(e){ return bot("<p>Press and hold the link above to copy it.</p>",["Back to menu"]); } }
+  if(t==="go premium"){ openSheet(); return; }
+  if(/can'?t cancel|cannot cancel|won'?t cancel|cancel for me/.test(t)) return say.cantCancel();
+  if(/refund|money back|charged|overcharg/.test(t)) return say.refundStart();
+  if(/cancel|unsubscrib|stop (paying|payment|subscription)|end (my )?sub/.test(t)) return say.cancel();
+  if(/still doesn|unlock|restore|isn'?t unlocked|not unlocked|locked|paid but/.test(t)) return t.includes("still") ? say.person() : say.unlock();
+  if(/payment page|won'?t open|link|checkout|can'?t pay|cannot pay/.test(t)) return say.pay();
+  if(/card|billing|invoice|receipt|update pay/.test(t)) return say.card();
+  if(/xp|level|streak|points/.test(t)) return say.xp();
+  if(/progress|lost|reset|delete|data|privacy|gdpr/.test(t)) return say.data();
+  if(/price|cost|how much|premium|subscribe/.test(t)) return say.price();
+  if(/wrong|mistake in|error|incorrect/.test(t)) return say.wrong();
+  if(/person|human|owner|contact|speak|talk/.test(t)) return say.person();
+  if(/^(hi|hello|hey|hiya)\b/.test(t)) return bot("<p>Hi! What can I help you with?</p>", MENU);
+  if(/thank/.test(t)) return bot("<p>You're welcome! Good luck with your studies. 💊</p>", ["Back to menu"]);
+  return say.fallback();
+}
+const ROUTE_ALIASES={cancel:"Cancel my subscription", refund:"Request a refund", unlock:"Premium isn't unlocked"};
+const _route=route;
+route=function(x){ if(ROUTE_ALIASES[x]){ me(ROUTE_ALIASES[x]); return _route(ROUTE_ALIASES[x]); } return _route(x); };
+$("composer").onsubmit=e=>{ e.preventDefault(); const v=$("chatInput").value.trim(); if(!v) return; $("chatInput").value=""; me(v); route(v); };
+
+renderHome();
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+</script>
+</body>
+</html>
