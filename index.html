@@ -83,8 +83,9 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(-
 /* Sections */
 .sec{margin:0 0 22px}
 .sec h2{font-size:1.2rem; margin:0 0 10px}
-.caps-grid{display:grid; grid-template-columns:1fr; gap:10px}
-@media (min-width:520px){ .caps-grid{grid-template-columns:1fr 1fr} }
+.caps-grid{display:grid; grid-template-columns:minmax(0,1fr); gap:10px}
+.cap{min-width:0}
+@media (min-width:520px){ .caps-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
 .cap{position:relative; display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--surface); border:2px solid var(--line); border-radius:999px; padding:6px 16px 6px 6px; transition:transform .15s ease, border-color .15s}
 .cap:hover{border-color:var(--c)}
 .cap:active{transform:scale(.97)}
