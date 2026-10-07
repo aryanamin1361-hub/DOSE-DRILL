@@ -46,6 +46,8 @@ h1,h2,h3,.display{font-family:"Fredoka","Atkinson Hyperlegible",system-ui,sans-s
 button{font:inherit; color:inherit; cursor:pointer}
 button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--violet); outline-offset:2px}
 .hidden{display:none !important}
+.play .web-only{display:none !important}
+html:not(.play) .play-only{display:none !important}
 .muted{color:var(--muted)}
 
 /* Top bar */
@@ -357,7 +359,7 @@ details summary{cursor:pointer; font-weight:700}
   <div class="acard">
     <h3>Subscription</h3>
     <ul class="list">
-      <li><a id="manageBtn" href="https://billing.stripe.com/p/login/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener">Manage or cancel subscription <span class="chev">›</span></a></li>
+      <li class="web-only"><a id="manageBtn" href="https://billing.stripe.com/p/login/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener">Manage or cancel subscription <span class="chev">›</span></a></li>
       <li><button type="button" id="restoreBtn">Restore premium on this device <span class="chev">›</span></button></li>
       <li><button type="button" id="refundBtn">Request a refund <span class="chev">›</span></button></li>
     </ul>
@@ -396,9 +398,10 @@ details summary{cursor:pointer; font-weight:700}
 <!-- SUBSCRIBE SHEET -->
 <div class="sheet-bg hidden" id="sheetBg" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet">
-    <h2 id="sheetTitle" style="margin:0">Go premium</h2>
-    <div class="price">£1.50 <small>a month</small></div>
-    <p class="muted" style="margin:0">Less than a meal deal. Cancel any time.</p>
+    <h2 id="sheetTitle" style="margin:0"><span class="web-only">Go premium</span><span class="play-only">Dose Drill Premium</span></h2>
+    <div class="price web-only">£1.50 <small>a month</small></div>
+    <p class="muted play-only" style="margin:6px 0 0">Premium topics are for Dose Drill Premium members. Already a member? Unlock Premium on this device below.</p>
+    <p class="muted web-only" style="margin:0">Less than a meal deal. Cancel any time.</p>
     <ul class="perks">
       <li><span>🧮</span>Quantities, percentages, infusion rates and mg/kg doses</li>
       <li><span>💊</span>Drug class quiz with suffix tricks</li>
@@ -406,15 +409,15 @@ details summary{cursor:pointer; font-weight:700}
       <li><span>📝</span>Mock exams with full worked answers</li>
       <li><span>🔁</span>Mistake review that brings back what you got wrong</li>
     </ul>
-    <a class="btn color" id="payBtn" href="https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener" style="display:block">Subscribe for £1.50 a month</a>
-    <p class="note">If the payment page doesn't open, copy this link into your browser:</p>
-    <div class="row" style="flex-wrap:nowrap; align-items:center">
+    <a class="btn color web-only" id="payBtn" href="https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00" target="_blank" rel="noopener" style="display:block">Subscribe for £1.50 a month</a>
+    <p class="note web-only">If the payment page doesn't open, copy this link into your browser:</p>
+    <div class="row web-only" style="flex-wrap:nowrap; align-items:center">
       <input class="urlbox" id="payUrl" readonly value="https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00" aria-label="Payment link">
       <button class="btn ghost" id="copyBtn" type="button" style="padding:8px 14px">Copy</button>
     </div>
-    <p class="note">By subscribing you agree to our <button class="linkbtn" style="padding:0" type="button" data-policy="terms">Terms of service</button> and ask for premium to start straight away. Because access starts immediately, you lose the 14-day right to cancel for a refund once premium is unlocked. You can cancel future payments any time from Account.</p>
+    <p class="note web-only">By subscribing you agree to our <button class="linkbtn" style="padding:0" type="button" data-policy="terms">Terms of service</button> and ask for premium to start straight away. Because access starts immediately, you lose the 14-day right to cancel for a refund once premium is unlocked. You can cancel future payments any time from Account.</p>
     <div class="row" style="justify-content:space-between">
-      <button class="linkbtn" id="unlockBtn" type="button">I've already paid</button>
+      <button class="linkbtn web-only" id="unlockBtn" type="button">I've already paid</button><button class="btn color play-only" id="unlockBtnPlay" type="button">I already have Premium</button>
       <button class="linkbtn" id="closeSheet" type="button">Not now</button>
     </div>
   </div>
@@ -446,6 +449,11 @@ details summary{cursor:pointer; font-weight:700}
 
 <script>
 const PAYMENT_LINK = "https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00";
+/* Google Play version: no purchasing or price inside the app (Play payments policy). Web keeps Stripe. */
+const IS_PLAY = (()=>{ try{
+  if(document.referrer.indexOf("android-app://com.dosedrill.app")===0) sessionStorage.setItem("dd-play","1");
+  return sessionStorage.getItem("dd-play")==="1";
+}catch(e){ return document.referrer.indexOf("android-app://")===0; } })();
 const API_BASE = "https://dose-drill-api.aryanamin1361.workers.dev"; // Cloudflare Worker that checks subscriptions with Stripe
 const $ = id => document.getElementById(id);
 const pick = a => a[Math.floor(Math.random()*a.length)];
@@ -630,7 +638,7 @@ function tile(t, onClick){
   b.style.setProperty("--c", `var(${t.c})`);
   const st=S.topics[t.id];
   const pct = st && st.total ? Math.round(st.right/st.total*100) : 0;
-  let tag = unlocked(t) ? (st && st.total ? pct+"%" : "") : "£1.50/mo";
+  let tag = unlocked(t) ? (st && st.total ? pct+"%" : "") : (IS_PLAY ? "Premium" : "£1.50/mo");
   if(t.id==="clock" && unlocked(t) && S.clockBest) tag = "Best "+S.clockBest;
   if(t.id==="mistakes" && unlocked(t)) tag = S.mistakes.length ? S.mistakes.length+" saved" : "";
   const blurb = t.id==="mistakes" ? (S.mistakes.length ? "Practise the questions you missed" : "Missed questions will appear here") : t.blurb;
@@ -866,7 +874,7 @@ $("stillBtn").onclick=()=>{ const a=F.deck[F.i][0]; S.known=S.known.filter(x=>x!
 $("flashBack").onclick=renderHome;
 
 /* ---------- sheet ---------- */
-function openSheet(){ const u=payUrl(); $("payBtn").href=u; $("payUrl").value=u; $("sheetBg").classList.remove("hidden"); $("payBtn").focus(); }
+function openSheet(){ if(IS_PLAY){ $("sheetBg").classList.remove("hidden"); $("unlockBtnPlay").focus(); return; } const u=payUrl(); $("payBtn").href=u; $("payUrl").value=u; $("sheetBg").classList.remove("hidden"); $("payBtn").focus(); }
 $("payBtn").addEventListener("click", ()=>{ $("payBtn").href=payUrl(); store.set("dd-pending", Date.now()); });
 function closeSheet(){ $("sheetBg").classList.add("hidden"); }
 $("copyBtn").onclick = async () => {
@@ -875,6 +883,8 @@ $("copyBtn").onclick = async () => {
   $("copyBtn").textContent = ok ? "Copied" : "Select and copy";
 };
 $("unlockBtn").onclick=()=>{ closeSheet(); openRestore(); };
+$("unlockBtnPlay").onclick=()=>{ closeSheet(); openRestore(); };
+if(IS_PLAY) document.documentElement.classList.add("play");
 
 /* ---------- restore sheet ---------- */
 function restoreMsg(t, bad){ const m=$("restoreMsg"); m.textContent=t||""; m.style.color = bad ? "var(--bad)" : ""; }
@@ -927,9 +937,9 @@ function renderAccount(){
   $("planBig").classList.toggle("pro",pro);
   $("planIcon").textContent = pro ? "⭐" : "🌱";
   $("planName").textContent = pro ? "Premium" : "Free plan";
-  $("planSub").textContent = pro ? (isTester ? "Tester access · all topics unlocked" : "£1.50 a month · all topics unlocked") : "3 calculation topics, flashcards and the daily challenge";
+  $("planSub").textContent = pro ? (isTester ? "Tester access · all topics unlocked" : (IS_PLAY ? "Premium · all topics unlocked" : "£1.50 a month · all topics unlocked")) : "3 calculation topics, flashcards and the daily challenge";
   const pa=$("planActions"); pa.innerHTML="";
-  if(!pro){ const b=document.createElement("button"); b.className="btn color"; b.type="button"; b.textContent="Go premium for £1.50 a month"; b.onclick=openSheet; pa.appendChild(b); }
+  if(!pro){ const b=document.createElement("button"); b.className="btn color"; b.type="button"; b.textContent= IS_PLAY ? "Unlock Premium" : "Go premium for £1.50 a month"; b.onclick=openSheet; pa.appendChild(b); }
   const answered=Object.values(S.topics).reduce((n,t)=>n+t.total,0);
   $("progressSummary").textContent = `Level ${levelOf(S.xp)}, ${S.xp} XP, ${answered} questions answered. Progress is saved on this device only.`;
   show("account");
@@ -1063,7 +1073,7 @@ function openPolicy(k){ $("policyBody").innerHTML=POLICIES[k]; show("policy"); }
 
 /* ================= Help assistant ================= */
 const chat=$("chat"); let started=false, R=null;
-const MENU=["Cancel my subscription","Request a refund","Premium isn't unlocked","Payment page won't open","Change my card","How does XP work?"];
+const MENU= IS_PLAY ? ["Cancel my subscription","Request a refund","Premium isn't unlocked","How does XP work?"] : ["Cancel my subscription","Request a refund","Premium isn't unlocked","Payment page won't open","Change my card","How does XP work?"];
 const esc = t => String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function scrollChat(){ window.scrollTo({top:document.body.scrollHeight, behavior:reduceMotion?"auto":"smooth"}); }
 function me(text){ const d=document.createElement("div"); d.className="msg me"; d.textContent=text; chat.appendChild(d); scrollChat(); }
@@ -1088,6 +1098,7 @@ function openHelp(intent){
 const say = {
   menu(){ bot("<p>Anything else I can help with?</p>", MENU); },
   cancel(){
+    if(IS_PLAY) return bot(`<p>You can cancel Dose Drill Premium any time and there's no fee. Use the <strong>manage subscription</strong> link in your payment receipt email, or tap <strong>Cancel it for me</strong> and a person will cancel it.</p><p>You keep Premium until the end of the month you've paid for.</p>`, ["Cancel it for me","Request a refund","Back to menu"]);
     const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
     bot(`<p>You can cancel any time and there's no fee.</p>
       <p>${PORTAL_LINK ? "Tap the button below, enter the email you used at checkout, and you'll get a login code. Then choose <strong>Cancel subscription</strong>." : "Open the payment receipt email from Stripe and use the <strong>manage subscription</strong> link in it, then choose <strong>Cancel subscription</strong>."}</p>
@@ -1103,12 +1114,12 @@ const say = {
   unlock(){ bot(`<p>If you've just paid, come back to the app and premium unlocks by itself within a few seconds.</p><p>On a new phone, or if it didn't unlock, tap <strong>Unlock premium</strong> and enter your checkout email and the last 4 digits of your card. We check them with Stripe.</p>`,
       ["Unlock premium","It still doesn't work","Back to menu"]); },
   unlockHelp(){ bot(`<p>Sorry it didn't unlock. Check that you're using the same email you entered on the Stripe payment page, and the card that pays the subscription.</p><p>If it still doesn't work, I'll pass it to a person.</p>`, ["Unlock premium","It still doesn't work","Back to menu"]); },
-  pay(){ bot(`<p>Some browsers block the payment page from opening inside the app. Copy this link and paste it into your browser instead:</p><pre>${PAYMENT_LINK}</pre>`, ["Copy the link","Back to menu"]); },
-  card(){ const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
+  pay(){ if(IS_PLAY) return say.price(); bot(`<p>Some browsers block the payment page from opening inside the app. Copy this link and paste it into your browser instead:</p><pre>${PAYMENT_LINK}</pre>`, ["Copy the link","Back to menu"]); },
+  card(){ if(IS_PLAY) return bot("<p>To update your card or get receipts, use the <strong>manage subscription</strong> link in your payment receipt email. If you can't find it, tap Talk to a person.</p>", ["Talk to a person","Back to menu"]); const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
     bot(`<p>You can update your card, see past payments and download receipts in your subscription settings.</p>${PORTAL_LINK?"":"<p>Use the <strong>manage subscription</strong> link in your Stripe receipt email.</p>"}${btn}`, ["Back to menu"]); },
   xp(){ bot("<p>You earn <strong>10 XP</strong> for each correct answer and <strong>30 bonus XP</strong> for finishing today's challenge. Every 100 XP takes you up a level.</p><p>Your streak grows each day you finish a round, and resets if you miss a day.</p>", ["Back to menu"]); },
   data(){ bot("<p>Your progress is saved on this device only, so clearing your browser data or switching device will reset it. Your subscription isn't affected.</p><p>You can reset progress yourself in <strong>Account</strong>. Details are in our <button class=\"linkbtn\" style=\"padding:0\" type=\"button\" data-policy=\"privacy\">privacy policy</button>.</p>", ["Back to menu"]); },
-  price(){ bot("<p>Premium is <strong>£1.50 a month</strong>. It unlocks the advanced calculations, drug class quiz, Beat the clock, mock exams and mistake review. Cancel any time.</p>", ["Go premium","Back to menu"]); },
+  price(){ if(IS_PLAY) return bot("<p>Premium topics (advanced calculations, drug class quiz, Beat the clock, mock exams and mistake review) are for Dose Drill Premium members. Premium isn't sold in this version of the app.</p><p>Already a member? Tap <strong>Unlock premium</strong>.</p>", ["Unlock premium","Back to menu"]); bot("<p>Premium is <strong>£1.50 a month</strong>. It unlocks the advanced calculations, drug class quiz, Beat the clock, mock exams and mistake review. Cancel any time.</p>", ["Go premium","Back to menu"]); },
   wrong(){ bot("<p>Thanks for flagging it. Accuracy matters a lot here. Please tell me which question looked wrong and why, and I'll pass it on for checking.</p>"); R={step:"report"}; },
   fallback(){ bot("<p>I'm not sure I understood that. Here's what I can help with:</p>", [...MENU,"A question looks wrong","Talk to a person"]); },
   person(){ R={step:"email", reason:"General support request"}; bot("<p>No problem. I'll pass your message to the owner.</p><p>What's your email address, so they can reply?</p>"); }
@@ -1134,6 +1145,7 @@ function route(text){
     if(R.step==="emailReport"){ if(t!=="skip" && /^\S+@\S+\.\S+$/.test(text.trim())) R.email=text.trim(); else R.email="(no reply needed)"; return sendRequest(); }
   }
   if(t==="unlock premium"){ openRestore(); return; }
+  if(t==="cancel it for me") return say.cantCancel();
   if(t==="copy the link"){ try{ navigator.clipboard.writeText(PAYMENT_LINK); return bot("<p>Copied. Paste it into your browser's address bar.</p>",["Back to menu"]); }catch(e){ return bot("<p>Press and hold the link above to copy it.</p>",["Back to menu"]); } }
   if(t==="go premium"){ openSheet(); return; }
   if(/can'?t cancel|cannot cancel|won'?t cancel|cancel for me/.test(t)) return say.cantCancel();
