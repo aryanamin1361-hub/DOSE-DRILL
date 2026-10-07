@@ -414,14 +414,39 @@ details summary{cursor:pointer; font-weight:700}
     </div>
     <p class="note">By subscribing you agree to our <button class="linkbtn" style="padding:0" type="button" data-policy="terms">Terms of service</button> and ask for premium to start straight away. Because access starts immediately, you lose the 14-day right to cancel for a refund once premium is unlocked. You can cancel future payments any time from Account.</p>
     <div class="row" style="justify-content:space-between">
-      <button class="linkbtn" id="unlockBtn" type="button">I have already subscribed</button>
+      <button class="linkbtn" id="unlockBtn" type="button">I've already paid</button>
       <button class="linkbtn" id="closeSheet" type="button">Not now</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESTORE SHEET -->
+<div class="sheet-bg hidden" id="restoreBg" role="dialog" aria-modal="true" aria-labelledby="restoreTitle">
+  <div class="sheet">
+    <h2 id="restoreTitle" style="margin:0 0 6px">Unlock premium</h2>
+    <p class="muted" style="margin:0 0 14px" id="restoreIntro">Already subscribed? Enter the email you used at checkout and the last 4 digits of the card you pay with. We check them with Stripe.</p>
+    <form id="restoreForm" class="stack" autocomplete="on">
+      <label class="field"><input id="rEmail" type="email" inputmode="email" autocomplete="email" placeholder="Checkout email" aria-label="Checkout email" required></label>
+      <label class="field"><input id="rLast4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="Last 4 card digits" aria-label="Last 4 digits of your card" required></label>
+      <button class="btn color" id="restoreGo" type="submit">Unlock premium</button>
+    </form>
+    <p class="note" id="restoreMsg" role="status" aria-live="polite"></p>
+    <details style="margin-top:10px"><summary>I have a tester code</summary>
+      <form id="testerForm" class="answer-row" style="margin-top:10px" autocomplete="off">
+        <label class="field"><input id="tCode" placeholder="Tester code" aria-label="Tester code" autocapitalize="characters"></label>
+        <button class="btn ghost" type="submit">Use code</button>
+      </form>
+    </details>
+    <div class="row" style="justify-content:space-between; margin-top:8px">
+      <button class="linkbtn" type="button" id="restoreHelp">Still stuck? Get help</button>
+      <button class="linkbtn" type="button" id="closeRestore">Close</button>
     </div>
   </div>
 </div>
 
 <script>
 const PAYMENT_LINK = "https://buy.stripe.com/3cIcN7fC4cGkcsS27E4Ja00";
+const API_BASE = "https://dose-drill-api.aryanamin1361.workers.dev"; // Cloudflare Worker that checks subscriptions with Stripe
 const $ = id => document.getElementById(id);
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -560,7 +585,37 @@ function genDaily(){ return Math.random()<0.75 ? genMixedCalc() : Object.assign(
 
 /* ---------- state ---------- */
 let S = store.get("dd2", null) || {xp:0, streak:0, lastDay:"", dailyDay:"", topics:{}, mistakes:[], clockBest:0, known:[]};
-let subscribed = store.get("dd-sub", false);
+/* ---------- premium: checked with Stripe through our server ---------- */
+let PREM = store.get("dd-prem", null);            // {token, until, checked}
+let subscribed = !!(PREM && PREM.until > Date.now());
+function setPrem(r){ PREM={token:r.token || (PREM && PREM.token), until:Number(r.until)||0, checked:Date.now()}; store.set("dd-prem",PREM); subscribed = PREM.until > Date.now(); }
+function clearPrem(){ PREM=null; store.set("dd-prem",null); subscribed=false; }
+async function api(path, body){
+  const r = await fetch(API_BASE+path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  return r.json();
+}
+function payRef(){
+  let r = store.get("dd-ref", null);
+  if(!r){ const raw = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Math.random().toString(36).slice(2)+Date.now().toString(36)+Math.random().toString(36).slice(2));
+    r = "dd_"+raw.replace(/[^A-Za-z0-9]/g,"").slice(0,40); store.set("dd-ref", r); }
+  return r;
+}
+const payUrl = () => PAYMENT_LINK + "?client_reference_id=" + payRef();
+function refreshViews(){ if(!$("account").classList.contains("hidden")) renderAccount(); else if(!$("home").classList.contains("hidden")) renderHome(); }
+function celebrate(msg){ closeSheet(); closeRestore(); toast(msg || "Premium unlocked. Enjoy! 🎉"); confetti(120); refreshViews(); }
+async function recheck(force){
+  if(!PREM || !PREM.token) return;
+  if(!force && Date.now()-PREM.checked < 12*3600*1000) return;
+  try{ const r = await api("/status", {token:PREM.token}); if(r && r.ok){ if(r.active) setPrem(r); else clearPrem(); refreshViews(); } }catch(e){ /* offline: keep premium until the paid period ends */ }
+}
+async function tryClaim(silent){
+  if(subscribed) return true;
+  try{
+    const r = await api("/claim", {ref:payRef()});
+    if(r && r.ok && r.token){ setPrem(r); store.set("dd-pending", null); celebrate(); return true; }
+  }catch(e){ if(!silent) restoreMsg("Can't reach the server. Check your internet connection and try again."); }
+  return false;
+}
 const save = () => store.set("dd2", S);
 const today = () => new Date().toLocaleDateString("en-CA");
 const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return d.toLocaleDateString("en-CA"); };
@@ -811,17 +866,50 @@ $("stillBtn").onclick=()=>{ const a=F.deck[F.i][0]; S.known=S.known.filter(x=>x!
 $("flashBack").onclick=renderHome;
 
 /* ---------- sheet ---------- */
-function openSheet(){ $("sheetBg").classList.remove("hidden"); $("payBtn").focus(); }
+function openSheet(){ const u=payUrl(); $("payBtn").href=u; $("payUrl").value=u; $("sheetBg").classList.remove("hidden"); $("payBtn").focus(); }
+$("payBtn").addEventListener("click", ()=>{ $("payBtn").href=payUrl(); store.set("dd-pending", Date.now()); });
 function closeSheet(){ $("sheetBg").classList.add("hidden"); }
 $("copyBtn").onclick = async () => {
   const inp=$("payUrl"); inp.select(); inp.setSelectionRange(0,999); let ok=false;
-  try{ await navigator.clipboard.writeText(PAYMENT_LINK); ok=true; }catch(e){ try{ ok=document.execCommand("copy"); }catch(e2){} }
+  store.set("dd-pending", Date.now()); try{ await navigator.clipboard.writeText(payUrl()); ok=true; }catch(e){ try{ ok=document.execCommand("copy"); }catch(e2){} }
   $("copyBtn").textContent = ok ? "Copied" : "Select and copy";
 };
-$("unlockBtn").onclick=()=>{ subscribed=true; store.set("dd-sub",true); closeSheet(); toast("Premium unlocked. Enjoy! 🎉"); confetti(120); renderHome(); };
+$("unlockBtn").onclick=()=>{ closeSheet(); openRestore(); };
+
+/* ---------- restore sheet ---------- */
+function restoreMsg(t, bad){ const m=$("restoreMsg"); m.textContent=t||""; m.style.color = bad ? "var(--bad)" : ""; }
+async function openRestore(){
+  restoreMsg(""); $("restoreBg").classList.remove("hidden");
+  const pending = store.get("dd-pending", null);
+  if(pending && Date.now()-pending < 3*24*3600*1000){ restoreMsg("Checking your payment…"); if(await tryClaim(false)) return; restoreMsg(""); }
+  $("rEmail").focus();
+}
+function closeRestore(){ $("restoreBg").classList.add("hidden"); }
+$("closeRestore").onclick=closeRestore;
+$("restoreBg").onclick=e=>{ if(e.target.id==="restoreBg") closeRestore(); };
+$("restoreHelp").onclick=()=>{ closeRestore(); openHelp("unlockHelp"); };
+$("restoreForm").onsubmit=async e=>{
+  e.preventDefault();
+  const email=$("rEmail").value.trim(), last4=$("rLast4").value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)) return restoreMsg("Please enter the email you used at checkout.", true);
+  if(!/^\d{4}$/.test(last4)) return restoreMsg("Please enter the last 4 digits of your card.", true);
+  $("restoreGo").disabled=true; restoreMsg("Checking with Stripe…");
+  try{
+    const r = await api("/restore", {email, last4});
+    if(r && r.ok && r.token){ setPrem(r); celebrate(); }
+    else restoreMsg("We couldn't find an active subscription with that email and card. Check both and try again.", true);
+  }catch(err){ restoreMsg("Can't reach the server. Check your internet connection and try again.", true); }
+  $("restoreGo").disabled=false;
+};
+$("testerForm").onsubmit=async e=>{
+  e.preventDefault(); const code=$("tCode").value.trim(); if(!code) return;
+  restoreMsg("Checking code…");
+  try{ const r = await api("/tester", {code}); if(r && r.ok && r.token){ setPrem(r); celebrate("Tester access unlocked. Thanks for testing! 🎉"); } else restoreMsg("That code isn't valid.", true); }
+  catch(err){ restoreMsg("Can't reach the server. Check your internet connection and try again.", true); }
+};
 $("closeSheet").onclick=closeSheet;
 $("sheetBg").onclick=e=>{ if(e.target.id==="sheetBg") closeSheet(); };
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeSheet(); closeRestore(); } });
 $("planBtn").onclick=openSheet;
 
 /* ---------- wiring ---------- */
@@ -835,11 +923,11 @@ const PORTAL_LINK = "https://billing.stripe.com/p/login/3cIcN7fC4cGkcsS27E4Ja00"
 const OWNER_EMAIL = "aryanamin1361@gmail.com";
 
 function renderAccount(){
-  const pro=subscribed;
+  const pro=subscribed; const isTester = pro && PREM && PREM.token && (()=>{ try{ return JSON.parse(atob(PREM.token.split(".")[0].replace(/-/g,"+").replace(/_/g,"/"))).tester; }catch(e){ return false; } })();
   $("planBig").classList.toggle("pro",pro);
   $("planIcon").textContent = pro ? "⭐" : "🌱";
   $("planName").textContent = pro ? "Premium" : "Free plan";
-  $("planSub").textContent = pro ? "£1.50 a month · all topics unlocked" : "3 calculation topics, flashcards and the daily challenge";
+  $("planSub").textContent = pro ? (isTester ? "Tester access · all topics unlocked" : "£1.50 a month · all topics unlocked") : "3 calculation topics, flashcards and the daily challenge";
   const pa=$("planActions"); pa.innerHTML="";
   if(!pro){ const b=document.createElement("button"); b.className="btn color"; b.type="button"; b.textContent="Go premium for £1.50 a month"; b.onclick=openSheet; pa.appendChild(b); }
   const answered=Object.values(S.topics).reduce((n,t)=>n+t.total,0);
@@ -851,7 +939,7 @@ function openPortal(){
   openHelp("cancel");
 }
 
-$("restoreBtn").onclick=()=>openHelp("unlock");
+$("restoreBtn").onclick=openRestore;
 $("refundBtn").onclick=()=>openHelp("refund");
 $("resetBtn").onclick=()=>{
   if(!confirm("Reset all progress on this device? Your XP, streak, scores and saved mistakes will be deleted. Your subscription is not affected.")) return;
@@ -948,9 +1036,10 @@ privacy:`<h2>Privacy policy</h2><p class="updated">${UPDATED}</p>
 <h3>1. The short version</h3>
 <p>We collect as little as possible. Your practice progress stays on your device. Payments are handled by Stripe. We don't sell your data, show ads, or use tracking cookies.</p>
 <h3>2. Information stored on your device</h3>
-<p>Your XP, level, streak, scores, saved mistakes, flashcard progress and premium status are saved in your browser's local storage. This information is not sent to us. You can delete it at any time from <strong>Account › Reset all progress</strong>, or by clearing your browser data.</p>
+<p>Your XP, level, streak, scores, saved mistakes and flashcard progress are saved in your browser's local storage and are not sent to us. Your premium unlock token is saved there too (see section 3). You can delete it at any time from <strong>Account › Reset all progress</strong>, or by clearing your browser data.</p>
 <h3>3. Payment information</h3>
 <p>When you subscribe, Stripe collects your name, email, card details and billing country to take payment and prevent fraud. Stripe shares with us your email, the amount paid, and the date and status of your subscription, so we can manage billing and refunds. We never receive your full card number. Stripe uses your data under its own privacy policy at stripe.com/gb/privacy.</p>
+<p>To unlock premium, the app sends our server a random purchase code created on your device, or the checkout email and last 4 card digits you type in. Our server checks these with Stripe and sends back an unlock token. It does not store them. Once a day the app sends that token to check your subscription is still active.</p>
 <h3>4. The Help assistant</h3>
 <p>The Help assistant runs inside the app. Messages you type are used only to show you answers on your device and are not stored by us. If you send a refund request, the details you choose to include (your checkout email, the reason and any notes) are sent to us by email so a person can review the request.</p>
 <h3>5. Why we use your information</h3>
@@ -962,7 +1051,7 @@ privacy:`<h2>Privacy policy</h2><p class="updated">${UPDATED}</p>
 <h3>6. How long we keep it</h3>
 <p>We keep refund request emails for up to 2 years. Payment records are kept for 6 years, as UK tax law requires. On-device data stays until you delete it.</p>
 <h3>7. Hosting</h3>
-<p>The app is hosted on claude.ai, a platform run by Anthropic. When you open the app, Anthropic may process technical information such as your IP address and device type to deliver the page securely, under its own privacy policy.</p>
+<p>The app is hosted on GitHub Pages, run by GitHub, Inc. When you open the app, GitHub may process technical information such as your IP address and device type to deliver the page securely, under its own privacy policy. Subscription checks run on Cloudflare Workers, run by Cloudflare, Inc., which processes your IP address to deliver each request.</p>
 <h3>8. Your rights</h3>
 <p>You have the right to ask for a copy of your data, to have it corrected or deleted, to object to or restrict how we use it, and to data portability. To use these rights, contact us at the email above. We will reply within one month. You also have the right to complain to the Information Commissioner's Office (ico.org.uk).</p>
 <h3>9. Children</h3>
@@ -1011,8 +1100,9 @@ const say = {
     bot(`<p>I can start a refund request. A person reviews every request, usually within 5 working days.</p>
       <p>Refunds are given for mistaken or duplicate charges, charges after cancelling, or a fault that stopped premium working. Partial months aren't refunded (see our <button class="linkbtn" style="padding:0" type="button" data-policy="refunds">refund policy</button>).</p><p>What's the reason?</p>`,
       ["I was charged by mistake","I was charged twice","Charged after cancelling","Premium didn't work","Something else"]); },
-  unlock(){ bot(`<p>After paying, premium needs unlocking once on each device:</p><p>Go to <strong>Account</strong>, tap <strong>Restore premium on this device</strong>, then <strong>Unlock premium</strong>.</p>`,
+  unlock(){ bot(`<p>If you've just paid, come back to the app and premium unlocks by itself within a few seconds.</p><p>On a new phone, or if it didn't unlock, tap <strong>Unlock premium</strong> and enter your checkout email and the last 4 digits of your card. We check them with Stripe.</p>`,
       ["Unlock premium","It still doesn't work","Back to menu"]); },
+  unlockHelp(){ bot(`<p>Sorry it didn't unlock. Check that you're using the same email you entered on the Stripe payment page, and the card that pays the subscription.</p><p>If it still doesn't work, I'll pass it to a person.</p>`, ["Unlock premium","It still doesn't work","Back to menu"]); },
   pay(){ bot(`<p>Some browsers block the payment page from opening inside the app. Copy this link and paste it into your browser instead:</p><pre>${PAYMENT_LINK}</pre>`, ["Copy the link","Back to menu"]); },
   card(){ const btn = PORTAL_LINK ? `<a class="btn color" href="${PORTAL_LINK}" target="_blank" rel="noopener">Open subscription settings</a>` : "";
     bot(`<p>You can update your card, see past payments and download receipts in your subscription settings.</p>${PORTAL_LINK?"":"<p>Use the <strong>manage subscription</strong> link in your Stripe receipt email.</p>"}${btn}`, ["Back to menu"]); },
@@ -1043,7 +1133,7 @@ function route(text){
       return bot("<p>Thanks, that's really helpful. If you'd like a reply, type your email. Otherwise tap Skip.</p>", ["Skip"]); }
     if(R.step==="emailReport"){ if(t!=="skip" && /^\S+@\S+\.\S+$/.test(text.trim())) R.email=text.trim(); else R.email="(no reply needed)"; return sendRequest(); }
   }
-  if(t==="unlock premium"){ subscribed=true; store.set("dd-sub",true); confetti(120); return bot("<p>Premium is unlocked on this device. Enjoy! 🎉</p>", ["Back to menu"]); }
+  if(t==="unlock premium"){ openRestore(); return; }
   if(t==="copy the link"){ try{ navigator.clipboard.writeText(PAYMENT_LINK); return bot("<p>Copied. Paste it into your browser's address bar.</p>",["Back to menu"]); }catch(e){ return bot("<p>Press and hold the link above to copy it.</p>",["Back to menu"]); } }
   if(t==="go premium"){ openSheet(); return; }
   if(/can'?t cancel|cannot cancel|won'?t cancel|cancel for me/.test(t)) return say.cantCancel();
@@ -1062,11 +1152,26 @@ function route(text){
   return say.fallback();
 }
 const ROUTE_ALIASES={cancel:"Cancel my subscription", refund:"Request a refund", unlock:"Premium isn't unlocked"};
+const _route0=route; route=function(x){ if(x==="unlockHelp"){ if(typeof R!=="undefined") R=null; return say.unlockHelp(); } return _route0(x); };
 const _route=route;
 route=function(x){ if(ROUTE_ALIASES[x]){ me(ROUTE_ALIASES[x]); return _route(ROUTE_ALIASES[x]); } return _route(x); };
 $("composer").onsubmit=e=>{ e.preventDefault(); const v=$("chatInput").value.trim(); if(!v) return; $("chatInput").value=""; me(v); route(v); };
 
 renderHome();
+(async ()=>{
+  const sp = new URLSearchParams(location.search), sid = sp.get("session_id");
+  if(sid){ history.replaceState(null, "", location.pathname); try{ const r = await api("/session", {session_id:sid}); if(r && r.ok && r.token){ setPrem(r); store.set("dd-pending", null); celebrate(); } }catch(e){} }
+  recheck(false);
+})();
+function onReturn(){
+  if(document.visibilityState!=="visible") return;
+  const p = store.get("dd-pending", null);
+  if(!subscribed && p && Date.now()-p < 3*24*3600*1000) tryClaim(true);
+  recheck(false);
+}
+document.addEventListener("visibilitychange", onReturn);
+window.addEventListener("focus", onReturn);
+onReturn();
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
 </script>
 </body>
